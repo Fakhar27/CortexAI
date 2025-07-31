@@ -1,0 +1,1 @@
+"""Model configurations for Cortex framework"""
