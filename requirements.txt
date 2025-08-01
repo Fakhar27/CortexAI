@@ -1,0 +1,16 @@
+# Core LangGraph and LangChain
+langgraph>=0.2.0
+langchain-core>=0.1.0
+langchain-cohere>=0.1.0
+
+# For future features
+langchain-openai>=0.1.0
+langchain-anthropic>=0.1.0
+
+# API framework (if we add HTTP endpoints)
+fastapi>=0.100.0
+uvicorn>=0.23.0
+
+# Utilities
+pydantic>=2.0.0
+python-dotenv>=1.0.0
