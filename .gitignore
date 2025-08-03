@@ -88,4 +88,5 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 /ignored
-/data/
+# /data/
+/documentation_langchain_langgraph/
