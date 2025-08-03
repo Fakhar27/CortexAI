@@ -29,3 +29,8 @@ dev = [
 Homepage = "https://github.com/yourusername/cortex"
 Documentation = "https://cortex.readthedocs.io"
 Repository = "https://github.com/yourusername/cortex"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cortex*"]
+exclude = ["data*", "ignored*", "test*"]

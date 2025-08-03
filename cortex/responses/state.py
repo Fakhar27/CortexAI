@@ -1,6 +1,7 @@
 """State management for Responses API"""
 from typing import TypedDict, List, Annotated, Optional
-from langchain_core.messages import BaseMessage, add_messages
+from langchain_core.messages import BaseMessage
+from langgraph.graph import add_messages
 
 
 class ResponsesState(TypedDict):

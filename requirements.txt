@@ -1,7 +1,9 @@
 # Core LangGraph and LangChain
 langgraph>=0.2.0
 langchain-core>=0.1.0
-langchain-cohere>=0.1.0
+cohere==5.13.11
+langchain-cohere==0.4.2
+langgraph-checkpoint-sqlite>=1.0.0
 
 # For future features
 langchain-openai>=0.1.0
