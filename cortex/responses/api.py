@@ -50,7 +50,15 @@ class ResponsesAPI:
         workflow.add_edge("generate", END)
         
         # Compile with checkpointer for persistence
-        return workflow.compile(checkpointer=self.checkpointer)
+        # This is for store=True scenarios
+        self.persistent_graph = workflow.compile(checkpointer=self.checkpointer)
+        
+        # Also compile without checkpointer for store=False
+        # This graph won't save anything
+        self.ephemeral_graph = workflow.compile(checkpointer=None)
+        
+        # Return the persistent one as default
+        return self.persistent_graph
     
     def _generate_node(self, state: ResponsesState) -> Dict[str, Any]:
         """

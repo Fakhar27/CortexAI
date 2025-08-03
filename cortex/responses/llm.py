@@ -2,7 +2,6 @@
 import os
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
 try:
@@ -13,8 +12,6 @@ except ImportError as e:
     COHERE_AVAILABLE = False
     from .mock_llm import MockChatModel as ChatCohere
 
-# from langchain_openai import ChatOpenAI
-# from langchain_anthropic import ChatAnthropic
 from cortex.models.registry import MODELS
 
 
@@ -47,9 +44,6 @@ def get_llm(model_str: str):
                 model=config["model_name"],
                 temperature=config.get("temperature", 0.7)
             )
-        case "mock":
-            from .mock_llm import MockChatModel
-            return MockChatModel(**config)
         # case "openai":
         #     return ChatOpenAI(
         #         model=config["model_name"],

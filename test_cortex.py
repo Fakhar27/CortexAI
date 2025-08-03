@@ -3,7 +3,7 @@ import os
 from cortex import ResponsesAPI
 
 # Make sure you have your Cohere API key set
-if not os.getenv("COHERE_API_KEY"):
+if not os.getenv("CO_API_KEY"):
     print("Please set COHERE_API_KEY environment variable")
     exit(1)
 

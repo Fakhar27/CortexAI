@@ -55,21 +55,32 @@ def create_response(
         "store": store
     }
     
-    # Step 3: Graph Invocation
-    # Configure persistence based on store parameter
-    if store:
-        # Use thread_id for conversation continuity
-        config = {"configurable": {"thread_id": thread_id}}
-    else:
-        # No persistence - empty config
-        config = {}
+    # Handle previous conversation loading for store=False
+    # If user wants to continue a conversation but not save the new response
+    if not store and previous_response_id:
+        # We need to manually load the previous conversation
+        # Since ephemeral graph won't have access to it
+        # TODO: Implement conversation retrieval from SQLite
+        # For now, just warn the user
+        print(f"Warning: store=False with previous_response_id may not load history properly")
     
-    # Invoke the graph with our state and config
+    # Step 3: Graph Invocation
+    # Choose the right graph and config based on store parameter
+    if store:
+        # Use persistent graph with thread_id for conversation continuity
+        config = {"configurable": {"thread_id": thread_id}}
+        graph = api_instance.persistent_graph
+    else:
+        # Use ephemeral graph - no persistence, no thread_id needed
+        config = {}
+        graph = api_instance.ephemeral_graph
+    
+    # Invoke the appropriate graph with our state and config
     # This is where the magic happens - LangGraph handles:
-    # 1. Loading previous messages (if thread_id exists)
+    # 1. Loading previous messages (if thread_id exists and store=True)
     # 2. Running through the graph nodes
-    # 3. Saving the result (if store=True)
-    result = api_instance.graph.invoke(initial_state, config)
+    # 3. Saving the result (only if store=True)
+    result = graph.invoke(initial_state, config)
     
     # Step 4: Response Formatting
     # Extract the AI's response from the result
