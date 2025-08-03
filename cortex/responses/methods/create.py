@@ -29,21 +29,37 @@ def create_response(
         metadata: Custom key-value pairs
         
     Returns:
-        OpenAI-compatible response dict
+        OpenAI-compatible response dict or error
     """
     # Step 1: ID Generation
     # Always generate a new response_id for this response
     response_id = f"resp_{uuid.uuid4().hex[:12]}"
     
-    # Determine thread_id for conversation continuity
+    # Step 2: Validate previous_response_id if provided
     if previous_response_id:
-        # Continuing existing conversation
-        thread_id = previous_response_id
+        # Check if the previous response exists in database
+        if not api_instance.checkpointer.response_exists(previous_response_id):
+            # Return OpenAI-compatible error
+            return {
+                "error": {
+                    "message": f"Response '{previous_response_id}' not found",
+                    "type": "invalid_request_error",
+                    "param": "previous_response_id",
+                    "code": "resource_not_found"
+                }
+            }
+        
+        # Get the thread_id that this response belongs to
+        thread_id = api_instance.checkpointer.get_thread_for_response(previous_response_id)
+        if not thread_id:
+            # Fallback to using previous_response_id as thread_id
+            # This handles old conversations before we added tracking
+            thread_id = previous_response_id
     else:
         # New conversation - thread_id same as response_id
         thread_id = response_id
     
-    # Step 2: State Preparation
+    # Step 3: State Preparation
     # Create initial state matching ResponsesState structure
     initial_state = {
         "messages": [HumanMessage(content=input)],  # Convert user input to message
@@ -55,32 +71,23 @@ def create_response(
         "store": store
     }
     
-    # Handle previous conversation loading for store=False
-    # If user wants to continue a conversation but not save the new response
-    if not store and previous_response_id:
-        # We need to manually load the previous conversation
-        # Since ephemeral graph won't have access to it
-        # TODO: Implement conversation retrieval from SQLite
-        # For now, just warn the user
-        print(f"Warning: store=False with previous_response_id may not load history properly")
+    # Step 4: Graph Invocation with Smart Checkpointer
+    # Configure with thread_id, store flag, AND response_id
+    config = {
+        "configurable": {
+            "thread_id": thread_id,
+            "response_id": response_id,  # Pass this so checkpointer can track it
+            "store": store  # Pass store flag to SmartCheckpointer
+        }
+    }
     
-    # Step 3: Graph Invocation
-    # Choose the right graph and config based on store parameter
-    if store:
-        # Use persistent graph with thread_id for conversation continuity
-        config = {"configurable": {"thread_id": thread_id}}
-        graph = api_instance.persistent_graph
-    else:
-        # Use ephemeral graph - no persistence, no thread_id needed
-        config = {}
-        graph = api_instance.ephemeral_graph
-    
-    # Invoke the appropriate graph with our state and config
-    # This is where the magic happens - LangGraph handles:
-    # 1. Loading previous messages (if thread_id exists and store=True)
-    # 2. Running through the graph nodes
-    # 3. Saving the result (only if store=True)
-    result = graph.invoke(initial_state, config)
+    # Invoke the single graph with our state and config
+    # The SmartCheckpointer will:
+    # 1. Load previous messages if thread_id exists (get_tuple)
+    # 2. Run through the graph nodes
+    # 3. Track response_id -> thread_id mapping
+    # 4. Save ONLY if store=True (put method checks this)
+    result = api_instance.graph.invoke(initial_state, config)
     
     # Step 4: Response Formatting
     # Extract the AI's response from the result
