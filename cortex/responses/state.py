@@ -17,3 +17,4 @@ class ResponsesState(TypedDict):
     instructions: Optional[str]
     model: str
     store: bool
+    temperature: float

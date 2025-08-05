@@ -15,12 +15,13 @@ except ImportError as e:
 from cortex.models.registry import MODELS
 
 
-def get_llm(model_str: str):
+def get_llm(model_str: str, temperature: float = None):
     """
     Get configured LLM instance based on model string
     
     Args:
         model_str: Model identifier (e.g., "cohere", "gpt-4")
+        temperature: Override temperature (if None, uses registry default)
         
     Returns:
         Configured LangChain chat model instance
@@ -35,6 +36,9 @@ def get_llm(model_str: str):
     
     config = MODELS[model_str]
     
+    # Use provided temperature or fall back to registry default
+    final_temperature = temperature if temperature is not None else config.get("temperature", 0.7)
+    
     match config["provider"]:
         case "cohere":
             if not COHERE_AVAILABLE:
@@ -42,17 +46,17 @@ def get_llm(model_str: str):
                 return ChatCohere(**config)
             return ChatCohere(
                 model=config["model_name"],
-                temperature=config.get("temperature", 0.7)
+                temperature=final_temperature
             )
         # case "openai":
         #     return ChatOpenAI(
         #         model=config["model_name"],
-        #         temperature=config.get("temperature", 0.7)
+        #         temperature=final_temperature
         #     )
         # case "anthropic":
         #     return ChatAnthropic(
         #         model=config["model_name"],
-        #         temperature=config.get("temperature", 0.7)
+        #         temperature=final_temperature
         #     )
         case _:
             raise ValueError(f"Provider '{config['provider']}' not supported yet")

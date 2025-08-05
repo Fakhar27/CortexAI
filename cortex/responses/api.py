@@ -61,8 +61,10 @@ class ResponsesAPI:
         Returns:
             Updated state with AI response
         """
-        # Get the LLM based on model in state
-        llm = get_llm(state["model"])
+        # Get the LLM based on model in state, with user's temperature
+        # Extract temperature from initial request (passed through state)
+        temperature = state.get("temperature")
+        llm = get_llm(state["model"], temperature=temperature)
         
         # Build messages for the LLM
         messages = []

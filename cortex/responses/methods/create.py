@@ -4,6 +4,7 @@ import time
 import logging
 from typing import Dict, Any, Optional
 from langchain_core.messages import HumanMessage
+from cortex.models.registry import MODELS
 
 logger = logging.getLogger(__name__)
 
@@ -75,6 +76,16 @@ def _validate_create_inputs(input: str, model: str, temperature: float, metadata
     if not model or not isinstance(model, str):
         return _create_error_response(
             "Model must be a non-empty string",
+            "invalid_request_error",
+            "model",
+            "invalid_value"
+        )
+    
+    # Validate model exists in registry (fail fast)
+    if model not in MODELS:
+        available_models = list(MODELS.keys())
+        return _create_error_response(
+            f"Model '{model}' is not supported. Available models: {', '.join(available_models)}",
             "invalid_request_error",
             "model",
             "invalid_value"
@@ -195,7 +206,8 @@ def create_response(
         "input": input,
         "instructions": instructions,
         "model": model,
-        "store": store
+        "store": store,
+        "temperature": temperature  # Pass temperature to be used in _generate_node
     }
     
     # Step 4: Graph Invocation with Smart Checkpointer
