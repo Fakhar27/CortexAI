@@ -5,23 +5,10 @@ import logging
 from typing import Dict, Any, Optional
 from langchain_core.messages import HumanMessage
 
-# Set up logging
 logger = logging.getLogger(__name__)
 
 
 def _create_error_response(message: str, error_type: str = "api_error", param: Optional[str] = None, code: Optional[str] = None) -> Dict[str, Any]:
-    """
-    Create OpenAI-compatible error response
-    
-    Args:
-        message: Human-readable error message
-        error_type: Type of error (api_error, invalid_request_error, etc.)
-        param: Parameter that caused the error
-        code: Specific error code
-        
-    Returns:
-        OpenAI-compatible error response
-    """
     error_response = {
         "error": {
             "message": message,
@@ -248,7 +235,7 @@ def create_response(
             )
         
         # Authentication/API key errors
-        if any(keyword in error_message for keyword in ['api key', 'authentication', 'unauthorized', 'forbidden']):
+        if any(keyword in error_message for keyword in ['api key', 'api_key', 'co_api_key', 'authentication', 'unauthorized', 'forbidden', 'token', 'env']):
             return _create_error_response(
                 "AI service authentication failed. Please check configuration.",
                 "api_error",

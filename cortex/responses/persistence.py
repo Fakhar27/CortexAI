@@ -36,20 +36,31 @@ class SmartCheckpointer(SqliteSaver):
     """
     Smart checkpointer that handles store=True/False logic
     Always reads from DB, only saves when store=True
+    Uses separate connection for response tracking to avoid transaction conflicts
     """
     
     def __init__(self, conn: sqlite3.Connection):
         """Initialize with SQLite connection"""
         super().__init__(conn)
         self.conn = conn
+        
+        # Get database path from connection
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA database_list")
+        db_info = cursor.fetchone()
+        self.db_path = db_info[2] if db_info else "conversations.db"
+        
+        # Create separate connection for response tracking (our own "key")
+        self.tracking_conn = sqlite3.connect(self.db_path, check_same_thread=False)
         self._setup_response_tracking()
     
     def _setup_response_tracking(self):
         """
         Create response tracking table to map response_ids to thread_ids
         This solves the problem where continued responses aren't findable
+        Uses our separate tracking connection
         """
-        cursor = self.conn.cursor()
+        cursor = self.tracking_conn.cursor()
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS response_tracking (
                 response_id TEXT PRIMARY KEY,
@@ -58,11 +69,12 @@ class SmartCheckpointer(SqliteSaver):
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
-        self.conn.commit()
+        self.tracking_conn.commit()
         
     def response_exists(self, response_id: str) -> bool:
         """
         Check if a response exists and was stored
+        Uses our tracking connection for thread-safe access
         
         Args:
             response_id: The response_id to check
@@ -70,7 +82,7 @@ class SmartCheckpointer(SqliteSaver):
         Returns:
             True if exists and was stored, False otherwise
         """
-        cursor = self.conn.cursor()
+        cursor = self.tracking_conn.cursor()
         
         # Check in our response tracking table
         cursor.execute(
@@ -85,6 +97,7 @@ class SmartCheckpointer(SqliteSaver):
     def get_thread_for_response(self, response_id: str) -> Optional[str]:
         """
         Get the thread_id that a response_id belongs to
+        Uses our tracking connection for thread-safe access
         
         Args:
             response_id: The response_id to look up
@@ -92,7 +105,7 @@ class SmartCheckpointer(SqliteSaver):
         Returns:
             thread_id if found, None otherwise
         """
-        cursor = self.conn.cursor()
+        cursor = self.tracking_conn.cursor()
         cursor.execute(
             "SELECT thread_id FROM response_tracking WHERE response_id = ?",
             (response_id,)
@@ -103,37 +116,38 @@ class SmartCheckpointer(SqliteSaver):
     def put(self, config: Dict[str, Any], checkpoint: Dict[str, Any], metadata: Dict[str, Any], new_versions: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Save checkpoint only if store=True
+        Uses separate tracking connection to avoid transaction conflicts
         
         This is called by LangGraph after processing to save state
         """
         # Extract needed values
         store = config.get("configurable", {}).get("store", True)
         thread_id = config.get("configurable", {}).get("thread_id")
-        response_id = config.get("configurable", {}).get("response_id")  # We'll pass this
+        response_id = config.get("configurable", {}).get("response_id")
         
         if store:
-            # Save to database - pass all arguments to parent first
+            # Save to database - let LangGraph handle its transaction
             result = super().put(config, checkpoint, metadata, new_versions)
             
-            # Track this response_id -> thread_id mapping after successful save
+            # Track this response_id -> thread_id mapping using our separate connection
             if response_id and thread_id:
-                cursor = self.conn.cursor()
+                cursor = self.tracking_conn.cursor()
                 cursor.execute(
                     "INSERT OR REPLACE INTO response_tracking (response_id, thread_id, was_stored) VALUES (?, ?, ?)",
                     (response_id, thread_id, 1)
                 )
-                self.conn.commit()  # Safe to commit our tracking after LangGraph's transaction
+                self.tracking_conn.commit()  # Safe - using our own connection/transaction
             
             return result
         else:
             # Don't save checkpoint, but track the response as unsaved
             if response_id and thread_id:
-                cursor = self.conn.cursor()
+                cursor = self.tracking_conn.cursor()
                 cursor.execute(
                     "INSERT OR REPLACE INTO response_tracking (response_id, thread_id, was_stored) VALUES (?, ?, ?)",
                     (response_id, thread_id, 0)
                 )
-                self.conn.commit()  # Safe to commit our own transaction
+                self.tracking_conn.commit()  # Safe - using our own connection/transaction
             
             # Return a dummy response that prevents LangGraph from erroring
             return {
@@ -143,6 +157,20 @@ class SmartCheckpointer(SqliteSaver):
                 "checkpoint": checkpoint,
                 "metadata": metadata
             }
+    
+    def close(self):
+        """
+        Close both connections properly
+        Important for cleanup and avoiding connection leaks
+        """
+        try:
+            self.tracking_conn.close()
+        except:
+            pass  # Ignore errors during cleanup
+        
+        # Let parent class handle main connection
+        if hasattr(super(), 'close'):
+            super().close()
 
 
 def get_no_op_checkpointer() -> None:
