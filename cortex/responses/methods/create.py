@@ -1,8 +1,135 @@
 """Create method for Responses API - OpenAI compatible response generation"""
 import uuid
 import time
+import logging
 from typing import Dict, Any, Optional
 from langchain_core.messages import HumanMessage
+
+# Set up logging
+logger = logging.getLogger(__name__)
+
+
+def _create_error_response(message: str, error_type: str = "api_error", param: Optional[str] = None, code: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Create OpenAI-compatible error response
+    
+    Args:
+        message: Human-readable error message
+        error_type: Type of error (api_error, invalid_request_error, etc.)
+        param: Parameter that caused the error
+        code: Specific error code
+        
+    Returns:
+        OpenAI-compatible error response
+    """
+    error_response = {
+        "error": {
+            "message": message,
+            "type": error_type
+        }
+    }
+    
+    if param:
+        error_response["error"]["param"] = param
+    if code:
+        error_response["error"]["code"] = code
+        
+    return error_response
+
+
+def _validate_create_inputs(input: str, model: str, temperature: float, metadata: Optional[Dict[str, str]]) -> Optional[Dict[str, Any]]:
+    """
+    Validate inputs for create_response function
+    
+    Args:
+        input: User's message
+        model: LLM model name
+        temperature: LLM temperature
+        metadata: Optional metadata dict
+        
+    Returns:
+        Error response dict if validation fails, None if valid
+    """
+    # Validate input
+    if not input:
+        return _create_error_response(
+            "Input cannot be empty",
+            "invalid_request_error",
+            "input",
+            "missing_required_parameter"
+        )
+    
+    if not isinstance(input, str):
+        return _create_error_response(
+            "Input must be a string",
+            "invalid_request_error",
+            "input",
+            "invalid_type"
+        )
+    
+    if not input.strip():
+        return _create_error_response(
+            "Input cannot be empty or whitespace only",
+            "invalid_request_error",
+            "input",
+            "invalid_value"
+        )
+    
+    # Validate input length (50,000 chars is reasonable limit)
+    if len(input) > 50000:
+        return _create_error_response(
+            f"Input too long. Maximum length is 50,000 characters, got {len(input)}",
+            "invalid_request_error",
+            "input",
+            "invalid_value"
+        )
+    
+    # Validate model
+    if not model or not isinstance(model, str):
+        return _create_error_response(
+            "Model must be a non-empty string",
+            "invalid_request_error",
+            "model",
+            "invalid_value"
+        )
+    
+    # Validate temperature
+    if not isinstance(temperature, (int, float)):
+        return _create_error_response(
+            "Temperature must be a number",
+            "invalid_request_error",
+            "temperature",
+            "invalid_type"
+        )
+    
+    if temperature < 0 or temperature > 2.0:
+        return _create_error_response(
+            "Temperature must be between 0 and 2.0",
+            "invalid_request_error",
+            "temperature",
+            "invalid_value"
+        )
+    
+    # Validate metadata if provided
+    if metadata is not None:
+        if not isinstance(metadata, dict):
+            return _create_error_response(
+                "Metadata must be a dictionary",
+                "invalid_request_error",
+                "metadata",
+                "invalid_type"
+            )
+        
+        # Check metadata size (OpenAI limits this)
+        if len(str(metadata)) > 1000:
+            return _create_error_response(
+                "Metadata too large. Maximum size is 1000 characters",
+                "invalid_request_error",
+                "metadata",
+                "invalid_value"
+            )
+    
+    return None  # All validations passed
 
 
 def create_response(
@@ -31,30 +158,43 @@ def create_response(
     Returns:
         OpenAI-compatible response dict or error
     """
+    # Step 0: Input Validation
+    validation_error = _validate_create_inputs(input, model, temperature, metadata)
+    if validation_error:
+        logger.warning(f"Input validation failed: {validation_error['error']['message']}")
+        return validation_error
     # Step 1: ID Generation
     # Always generate a new response_id for this response
     response_id = f"resp_{uuid.uuid4().hex[:12]}"
     
     # Step 2: Validate previous_response_id if provided
     if previous_response_id:
-        # Check if the previous response exists in database
-        if not api_instance.checkpointer.response_exists(previous_response_id):
-            # Return OpenAI-compatible error
-            return {
-                "error": {
-                    "message": f"Response '{previous_response_id}' not found",
-                    "type": "invalid_request_error",
-                    "param": "previous_response_id",
-                    "code": "resource_not_found"
-                }
-            }
-        
-        # Get the thread_id that this response belongs to
-        thread_id = api_instance.checkpointer.get_thread_for_response(previous_response_id)
-        if not thread_id:
-            # Fallback to using previous_response_id as thread_id
-            # This handles old conversations before we added tracking
-            thread_id = previous_response_id
+        try:
+            # Check if the previous response exists in database
+            if not api_instance.checkpointer.response_exists(previous_response_id):
+                logger.info(f"Previous response not found: {previous_response_id}")
+                return _create_error_response(
+                    f"Response '{previous_response_id}' not found",
+                    "invalid_request_error",
+                    "previous_response_id",
+                    "resource_not_found"
+                )
+            
+            # Get the thread_id that this response belongs to
+            thread_id = api_instance.checkpointer.get_thread_for_response(previous_response_id)
+            if not thread_id:
+                # Fallback to using previous_response_id as thread_id
+                # This handles old conversations before we added tracking
+                logger.warning(f"No thread_id found for response {previous_response_id}, using as thread_id")
+                thread_id = previous_response_id
+                
+        except Exception as e:
+            logger.error(f"Database error while checking previous response: {e}")
+            return _create_error_response(
+                "Database temporarily unavailable. Please try again.",
+                "api_error",
+                code="database_error"
+            )
     else:
         # New conversation - thread_id same as response_id
         thread_id = response_id
@@ -81,49 +221,177 @@ def create_response(
         }
     }
     
-    # Invoke the single graph with our state and config
-    # The SmartCheckpointer will:
-    # 1. Load previous messages if thread_id exists (get_tuple)
-    # 2. Run through the graph nodes
-    # 3. Track response_id -> thread_id mapping
-    # 4. Save ONLY if store=True (put method checks this)
-    result = api_instance.graph.invoke(initial_state, config)
+    # Step 4: Graph Invocation with Comprehensive Error Handling
+    try:
+        # Invoke the single graph with our state and config
+        # The SmartCheckpointer will:
+        # 1. Load previous messages if thread_id exists (get_tuple)
+        # 2. Run through the graph nodes
+        # 3. Track response_id -> thread_id mapping
+        # 4. Save ONLY if store=True (put method checks this)
+        logger.info(f"Invoking graph for response {response_id} with model {model}")
+        result = api_instance.graph.invoke(initial_state, config)
+        
+    except Exception as e:
+        # Log the full error for debugging
+        logger.error(f"Graph invocation failed for response {response_id}: {str(e)}", exc_info=True)
+        
+        # Check for specific error types and provide appropriate responses
+        error_message = str(e).lower()
+        
+        # Network/API errors
+        if any(keyword in error_message for keyword in ['network', 'connection', 'timeout', 'unreachable']):
+            return _create_error_response(
+                "AI service is temporarily unavailable due to network issues. Please try again in a moment.",
+                "api_error",
+                code="network_error"
+            )
+        
+        # Authentication/API key errors
+        if any(keyword in error_message for keyword in ['api key', 'authentication', 'unauthorized', 'forbidden']):
+            return _create_error_response(
+                "AI service authentication failed. Please check configuration.",
+                "api_error",
+                code="authentication_error"
+            )
+        
+        # Rate limiting errors
+        if any(keyword in error_message for keyword in ['rate limit', 'quota', 'too many requests']):
+            return _create_error_response(
+                "AI service rate limit exceeded. Please try again later.",
+                "api_error",
+                code="rate_limit_exceeded"
+            )
+        
+        # Model-specific errors
+        if any(keyword in error_message for keyword in ['model', 'unavailable', 'not found']):
+            return _create_error_response(
+                f"Model '{model}' is temporarily unavailable. Please try a different model.",
+                "invalid_request_error",
+                "model",
+                "model_unavailable"
+            )
+        
+        # Generic fallback for unexpected errors
+        return _create_error_response(
+            "An unexpected error occurred while processing your request. Please try again.",
+            "api_error",
+            code="internal_error"
+        )
     
-    # Step 4: Response Formatting
-    # Extract the AI's response from the result
-    # The graph returns updated state with all messages
-    all_messages = result["messages"]
+    # Step 5: Safe Response Processing
+    try:
+        # Extract the AI's response from the result
+        # The graph returns updated state with all messages
+        if not isinstance(result, dict):
+            logger.error(f"Graph returned non-dict result: {type(result)}")
+            return _create_error_response(
+                "Invalid response format from AI service",
+                "api_error",
+                code="invalid_response"
+            )
+        
+        all_messages = result.get("messages", [])
+        if not all_messages:
+            logger.error("Graph returned empty messages list")
+            return _create_error_response(
+                "No response generated from AI service",
+                "api_error",
+                code="empty_response"
+            )
+        
+        # Get the last message (AI's response)
+        ai_response = all_messages[-1]
+        if not ai_response:
+            logger.error("Last message in response is None/empty")
+            return _create_error_response(
+                "Empty response generated from AI service",
+                "api_error",
+                code="empty_response"
+            )
+        
+        # Validate AI response has content
+        if not hasattr(ai_response, 'content'):
+            logger.error(f"AI response missing content attribute: {type(ai_response)}")
+            return _create_error_response(
+                "Malformed response from AI service",
+                "api_error",
+                code="malformed_response"
+            )
+        
+        # Handle None or empty content
+        content = ai_response.content
+        if content is None:
+            logger.warning("AI response content is None, using empty string")
+            content = ""
+        elif not isinstance(content, str):
+            logger.warning(f"AI response content is not string: {type(content)}, converting")
+            content = str(content)
+            
+    except Exception as e:
+        logger.error(f"Error processing graph result: {e}", exc_info=True)
+        return _create_error_response(
+            "Failed to process AI response",
+            "api_error",
+            code="processing_error"
+        )
     
-    # Get the last message (AI's response)
-    ai_response = all_messages[-1]
-    
-    # Format response to match OpenAI's structure
-    response = {
-        "id": response_id,
-        "object": "response",
-        "created_at": int(time.time()),
-        "status": "completed",
-        "model": model,
-        "output": [{
-            "type": "message",
-            "role": "assistant",
-            "content": [{
-                "type": "output_text",
-                "text": ai_response.content
-            }]
-        }],
-        "previous_response_id": previous_response_id,
-        "store": store,
-        "usage": {
-            # Simple token estimation (1 word ≈ 1.3 tokens)
-            "input_tokens": int(len(input.split()) * 1.3),
-            "output_tokens": int(len(ai_response.content.split()) * 1.3),
-            "total_tokens": int((len(input.split()) + len(ai_response.content.split())) * 1.3)
+    # Step 6: Safe Token Calculation and Response Formatting
+    try:
+        # Safe token estimation (handle empty content)
+        input_words = len(input.split()) if input else 0
+        output_words = len(content.split()) if content else 0
+        
+        # Simple token estimation (1 word ≈ 1.3 tokens)
+        input_tokens = int(input_words * 1.3)
+        output_tokens = int(output_words * 1.3)
+        total_tokens = input_tokens + output_tokens
+        
+        # Format response to match OpenAI's structure
+        response = {
+            "id": response_id,
+            "object": "response",
+            "created_at": int(time.time()),
+            "status": "completed",
+            "model": model,
+            "output": [{
+                "type": "message",
+                "role": "assistant",
+                "content": [{
+                    "type": "output_text",
+                    "text": content
+                }]
+            }],
+            "previous_response_id": previous_response_id,
+            "store": store,
+            "usage": {
+                "input_tokens": input_tokens,
+                "output_tokens": output_tokens,
+                "total_tokens": total_tokens
+            }
         }
-    }
+        
+    except Exception as e:
+        logger.error(f"Error formatting response: {e}", exc_info=True)
+        return _create_error_response(
+            "Failed to format response",
+            "api_error",
+            code="formatting_error"
+        )
     
-    # Add metadata if provided
-    if metadata:
-        response["metadata"] = metadata
-    
-    return response
+    # Step 7: Final Response Assembly
+    try:
+        # Add metadata if provided
+        if metadata:
+            response["metadata"] = metadata
+        
+        logger.info(f"Successfully created response {response_id} with {total_tokens} tokens")
+        return response
+        
+    except Exception as e:
+        logger.error(f"Error in final response assembly: {e}", exc_info=True)
+        return _create_error_response(
+            "Failed to assemble final response",
+            "api_error",
+            code="assembly_error"
+        )
