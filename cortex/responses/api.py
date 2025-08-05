@@ -24,10 +24,7 @@ class ResponsesAPI:
         Args:
             db_path: Optional path to database for persistence
         """
-        # Set up persistence
         self.checkpointer = get_checkpointer(db_path)
-        
-        # Set up the graph
         self.graph = self._setup_graph()
     
     def _setup_graph(self) -> StateGraph:
@@ -35,7 +32,7 @@ class ResponsesAPI:
         Set up the LangGraph workflow
         
         Returns:
-            Compiled StateGraph with smart checkpointer
+            Compiled StateGraph with checkpointer
         """
         # Create workflow with our state schema
         workflow = StateGraph(ResponsesState)
@@ -49,10 +46,7 @@ class ResponsesAPI:
         # Add edge from generate to END
         workflow.add_edge("generate", END)
         
-        # Compile with smart checkpointer that handles store flag
-        # The SmartCheckpointer will:
-        # - Always read history if available
-        # - Only save if store=True
+        # Compile with checkpointer for persistence
         return workflow.compile(checkpointer=self.checkpointer)
     
     def _generate_node(self, state: ResponsesState) -> Dict[str, Any]:

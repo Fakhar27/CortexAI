@@ -6,6 +6,32 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite import SqliteSaver
 
 
+def get_checkpointer(
+    db_path: Optional[str] = None,
+    provider: str = "sqlite"
+):
+    """
+    Get a checkpointer instance for persisting conversations
+    
+    Args:
+        db_path: Path to database file. If None, uses default
+        provider: Type of checkpointer (sqlite, postgres, memory)
+        
+    Returns:
+        Checkpointer instance
+    """
+    if provider == "sqlite":
+        path = db_path or os.getenv("CORTEX_DB_PATH", "conversations.db")
+        conn = sqlite3.connect(path, check_same_thread=False)
+        return SmartCheckpointer(conn)
+    
+    elif provider == "memory":
+        return MemorySaver()
+    
+    else:
+        raise ValueError(f"Unknown checkpointer provider: {provider}")
+
+
 class SmartCheckpointer(SqliteSaver):
     """
     Smart checkpointer that handles store=True/False logic
@@ -73,7 +99,7 @@ class SmartCheckpointer(SqliteSaver):
         )
         result = cursor.fetchone()
         return result[0] if result else None
-    
+        
     def put(self, config: Dict[str, Any], checkpoint: Dict[str, Any], metadata: Dict[str, Any], new_versions: Dict[str, Any] = None) -> Dict[str, Any]:
         """
         Save checkpoint only if store=True
@@ -85,21 +111,31 @@ class SmartCheckpointer(SqliteSaver):
         thread_id = config.get("configurable", {}).get("thread_id")
         response_id = config.get("configurable", {}).get("response_id")  # We'll pass this
         
-        # Track this response_id -> thread_id mapping
-        if response_id and thread_id:
-            cursor = self.conn.cursor()
-            cursor.execute(
-                "INSERT OR REPLACE INTO response_tracking (response_id, thread_id, was_stored) VALUES (?, ?, ?)",
-                (response_id, thread_id, 1 if store else 0)
-            )
-            self.conn.commit()
-        
         if store:
-            # Save to database - pass all arguments to parent
-            return super().put(config, checkpoint, metadata, new_versions)
+            # Save to database - pass all arguments to parent first
+            result = super().put(config, checkpoint, metadata, new_versions)
+            
+            # Track this response_id -> thread_id mapping after successful save
+            if response_id and thread_id:
+                cursor = self.conn.cursor()
+                cursor.execute(
+                    "INSERT OR REPLACE INTO response_tracking (response_id, thread_id, was_stored) VALUES (?, ?, ?)",
+                    (response_id, thread_id, 1)
+                )
+                self.conn.commit()  # Safe to commit our tracking after LangGraph's transaction
+            
+            return result
         else:
-            # Don't save checkpoint, but return a dummy response
-            # This prevents LangGraph from erroring
+            # Don't save checkpoint, but track the response as unsaved
+            if response_id and thread_id:
+                cursor = self.conn.cursor()
+                cursor.execute(
+                    "INSERT OR REPLACE INTO response_tracking (response_id, thread_id, was_stored) VALUES (?, ?, ?)",
+                    (response_id, thread_id, 0)
+                )
+                self.conn.commit()  # Safe to commit our own transaction
+            
+            # Return a dummy response that prevents LangGraph from erroring
             return {
                 "v": 1,
                 "ts": checkpoint.get("ts", ""),
@@ -107,79 +143,6 @@ class SmartCheckpointer(SqliteSaver):
                 "checkpoint": checkpoint,
                 "metadata": metadata
             }
-    
-    def get_tuple(self, config: Dict[str, Any]) -> Optional[Any]:
-        """
-        Always load history if it exists
-        
-        This is called by LangGraph before processing to load state
-        """
-        # Always try to load, regardless of store flag
-        return super().get_tuple(config)
-
-
-class MemorySmartCheckpointer(MemorySaver):
-    """
-    Memory version of smart checkpointer for testing
-    """
-    
-    def response_exists(self, thread_id: str) -> bool:
-        """Check if thread exists in memory"""
-        # MemorySaver stores in self.storage dict
-        for key in self.storage:
-            if key.get("thread_id") == thread_id:
-                return True
-        return False
-    
-    def put(self, config: Dict[str, Any], checkpoint: Dict[str, Any], metadata: Dict[str, Any], new_versions: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Save only if store=True"""
-        store = config.get("configurable", {}).get("store", True)
-        
-        if store:
-            # Pass all arguments to parent
-            return super().put(config, checkpoint, metadata, new_versions)
-        else:
-            # Return dummy response
-            return {
-                "v": 1,
-                "ts": checkpoint.get("ts", ""),
-                "id": checkpoint.get("id", ""),
-                "checkpoint": checkpoint,
-                "metadata": metadata
-            }
-
-
-def get_checkpointer(
-    db_path: Optional[str] = None,
-    provider: str = "sqlite"
-):
-    """
-    Get a smart checkpointer instance for persisting conversations
-    
-    Args:
-        db_path: Path to database file. If None, uses default
-        provider: Type of checkpointer (sqlite, postgres, memory)
-        
-    Returns:
-        SmartCheckpointer instance
-    """
-    if provider == "sqlite":
-        # Use provided path or default
-        path = db_path or os.getenv("CORTEX_DB_PATH", "conversations.db")
-        
-        # Create SQLite connection directly (as shown in LangGraph docs)
-        # check_same_thread=False is OK as SqliteSaver uses locks for thread safety
-        conn = sqlite3.connect(path, check_same_thread=False)
-        
-        # Return SmartCheckpointer with the connection
-        return SmartCheckpointer(conn)
-    
-    elif provider == "memory":
-        # For testing - in-memory smart checkpointer
-        return MemorySmartCheckpointer()
-    
-    else:
-        raise ValueError(f"Unknown checkpointer provider: {provider}")
 
 
 def get_no_op_checkpointer() -> None:

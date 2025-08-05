@@ -6,11 +6,6 @@ MODELS = {
         "model_name": "command-r",
         "temperature": 0.7
     },
-    "mock": {
-        "provider": "mock",
-        "model_name": "mock-model",
-        "temperature": 0.7
-    },
     # Future models can be added here:
     # "gpt-4": {
     #     "provider": "openai",
