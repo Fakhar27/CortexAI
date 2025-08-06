@@ -24,8 +24,30 @@ class ResponsesAPI:
         Args:
             db_path: Optional path to database for persistence
         """
-        self.checkpointer = get_checkpointer(db_path)
-        self.graph = self._setup_graph()
+        try:
+            # Validate db_path if provided
+            if db_path is not None:
+                import os
+                # Check if parent directory exists
+                parent_dir = os.path.dirname(db_path)
+                if parent_dir and not os.path.exists(parent_dir):
+                    raise ValueError(f"Database directory does not exist: {parent_dir}")
+            
+            # Initialize checkpointer with error handling
+            try:
+                self.checkpointer = get_checkpointer(db_path)
+            except Exception as e:
+                raise RuntimeError(f"Failed to initialize database: {str(e)}")
+            
+            # Setup graph with error handling
+            try:
+                self.graph = self._setup_graph()
+            except Exception as e:
+                raise RuntimeError(f"Failed to setup graph workflow: {str(e)}")
+                
+        except Exception as e:
+            # Re-raise with more context
+            raise RuntimeError(f"ResponsesAPI initialization failed: {str(e)}")
     
     def _setup_graph(self) -> StateGraph:
         """
@@ -61,28 +83,55 @@ class ResponsesAPI:
         Returns:
             Updated state with AI response
         """
-        # Get the LLM based on model in state, with user's temperature
-        # Extract temperature from initial request (passed through state)
-        temperature = state.get("temperature")
-        llm = get_llm(state["model"], temperature=temperature)
-        
-        # Build messages for the LLM
-        messages = []
-        
-        # Add system message if instructions provided
-        if state.get("instructions"):
-            messages.append(SystemMessage(content=state["instructions"]))
-        
-        # Add conversation history (already has user's new message)
-        messages.extend(state["messages"])
-        
-        # Generate response
-        ai_response = llm.invoke(messages)
-        
-        # Return updated state with AI response
-        return {
-            "messages": [ai_response]  # Will be added to existing messages
-        }
+        try:
+            # Get the LLM based on model in state, with user's temperature
+            # Extract temperature from initial request (passed through state)
+            temperature = state.get("temperature")
+            llm = get_llm(state["model"], temperature=temperature)
+            
+            # Build messages for the LLM
+            messages = []
+            
+            # Add system message if instructions provided
+            if state.get("instructions"):
+                messages.append(SystemMessage(content=state["instructions"]))
+            
+            # Add conversation history (already has user's new message)
+            messages.extend(state["messages"])
+            
+            # Generate response with error handling
+            try:
+                ai_response = llm.invoke(messages)
+            except Exception as e:
+                # LLM invocation failed - create error message
+                error_msg = str(e).lower()
+                
+                # Check for specific error types
+                if any(keyword in error_msg for keyword in ['api_key', 'api key', 'authentication', 'unauthorized']):
+                    error_content = "Authentication failed. Please check your API key configuration."
+                elif any(keyword in error_msg for keyword in ['rate', 'limit', 'quota', 'too many']):
+                    error_content = "Rate limit exceeded. Please wait a moment and try again."
+                elif any(keyword in error_msg for keyword in ['timeout', 'timed out']):
+                    error_content = "Request timed out. The AI service is taking too long to respond."
+                elif any(keyword in error_msg for keyword in ['context', 'length', 'too long', 'token']):
+                    error_content = "Message too long. Please reduce the length of your input."
+                else:
+                    error_content = f"AI service error: {str(e)}"
+                
+                # Create an error response message
+                ai_response = AIMessage(content=f"Error: {error_content}")
+            
+            # Return updated state with AI response
+            return {
+                "messages": [ai_response]  # Will be added to existing messages
+            }
+            
+        except Exception as e:
+            # Catch any other unexpected errors
+            # Return an error message instead of crashing
+            return {
+                "messages": [AIMessage(content=f"System error: {str(e)}")]
+            }
     
     def create(
         self,

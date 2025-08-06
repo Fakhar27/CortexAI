@@ -204,7 +204,9 @@ def create_response(
         "response_id": response_id,
         "previous_response_id": previous_response_id,
         "input": input,
-        "instructions": instructions,
+        # Per OpenAI spec: instructions are discarded when previous_response_id is provided
+        # This allows clean system message swapping between responses
+        "instructions": instructions if not previous_response_id else None,
         "model": model,
         "store": store,
         "temperature": temperature  # Pass temperature to be used in _generate_node
