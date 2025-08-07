@@ -10,19 +10,44 @@ logger = logging.getLogger(__name__)
 
 
 def _create_error_response(message: str, error_type: str = "api_error", param: Optional[str] = None, code: Optional[str] = None) -> Dict[str, Any]:
-    error_response = {
-        "error": {
-            "message": message,
-            "type": error_type
-        }
+    """Create an OpenAI-compatible error response with full structure"""
+    # Build error object
+    error_obj = {
+        "message": message,
+        "type": error_type
     }
     
     if param:
-        error_response["error"]["param"] = param
+        error_obj["param"] = param
     if code:
-        error_response["error"]["code"] = code
-        
-    return error_response
+        error_obj["code"] = code
+    
+    # Return full response structure with error field populated
+    return {
+        "id": None,
+        "object": "response",
+        "created_at": int(time.time()),
+        "status": "failed",
+        "error": error_obj,
+        "incomplete_details": None,
+        "instructions": None,
+        "max_output_tokens": None,
+        "model": None,
+        "output": [],
+        "parallel_tool_calls": None,
+        "previous_response_id": None,
+        "reasoning": None,
+        "store": None,
+        "temperature": None,
+        "text": None,
+        "tool_choice": None,
+        "tools": None,
+        "top_p": None,
+        "truncation": None,
+        "usage": None,
+        "user": None,
+        "metadata": None
+    }
 
 
 def _validate_create_inputs(input: str, model: str, temperature: float, metadata: Optional[Dict[str, str]]) -> Optional[Dict[str, Any]]:
@@ -348,28 +373,60 @@ def create_response(
         output_tokens = int(output_words * 1.3)
         total_tokens = input_tokens + output_tokens
         
-        # Format response to match OpenAI's structure
+        # Generate message ID for the output message
+        message_id = f"msg_{uuid.uuid4().hex[:24]}"
+        
+        # Format response to match OpenAI's structure exactly
         response = {
             "id": response_id,
             "object": "response",
             "created_at": int(time.time()),
             "status": "completed",
+            "error": None,  # No error on success
+            "incomplete_details": None,  # No incomplete details for successful response
+            "instructions": instructions if not previous_response_id else None,  # Echo instructions (null if continuing)
+            "max_output_tokens": None,  # Not implemented yet
             "model": model,
             "output": [{
                 "type": "message",
+                "id": message_id,  # Unique message ID
+                "status": "completed",  # Message status
                 "role": "assistant",
                 "content": [{
                     "type": "output_text",
-                    "text": content
+                    "text": content,
+                    "annotations": []  # Empty annotations array
                 }]
             }],
+            "parallel_tool_calls": True,  # Default value
             "previous_response_id": previous_response_id,
+            "reasoning": {  # Reasoning object (for o-series models)
+                "effort": None,
+                "summary": None
+            },
             "store": store,
+            "temperature": temperature,  # Echo back the temperature used
+            "text": {  # Text format configuration
+                "format": {
+                    "type": "text"
+                }
+            },
+            "tool_choice": "auto",  # Default tool choice
+            "tools": [],  # Empty tools array (not implemented)
+            "top_p": 1.0,  # Default top_p value
+            "truncation": "disabled",  # Default truncation
             "usage": {
                 "input_tokens": input_tokens,
+                "input_tokens_details": {  # Token details
+                    "cached_tokens": 0  # No caching implemented
+                },
                 "output_tokens": output_tokens,
+                "output_tokens_details": {  # Output token details
+                    "reasoning_tokens": 0  # No reasoning tokens
+                },
                 "total_tokens": total_tokens
-            }
+            },
+            "user": None  # No user tracking implemented
         }
         
     except Exception as e:
@@ -382,9 +439,8 @@ def create_response(
     
     # Step 7: Final Response Assembly
     try:
-        # Add metadata if provided
-        if metadata:
-            response["metadata"] = metadata
+        # Add metadata (empty dict if not provided to match OpenAI)
+        response["metadata"] = metadata if metadata is not None else {}
         
         logger.info(f"Successfully created response {response_id} with {total_tokens} tokens")
         return response
