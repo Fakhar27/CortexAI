@@ -84,7 +84,7 @@ dmypy.json
 
 # pytype static type analyzer
 .pytype/
-
+test_results
 # Cython debug symbols
 cython_debug/
 /ignored
