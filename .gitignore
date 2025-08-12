@@ -89,5 +89,6 @@ test_results
 cython_debug/
 /ignored
 /data/
+/test_simple/
 /documentation_langchain_langgraph/
 /test_and_logs/

@@ -1,35 +1,171 @@
-"""Persistence and checkpointing for Responses API"""
+"""
+Persistence and checkpointing for Responses API
+Supports SQLite (local) and PostgreSQL (production/serverless)
+"""
 import os
 import sqlite3
+import warnings
 from typing import Optional, Dict, Any
+from urllib.parse import urlparse
+
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.sqlite import SqliteSaver
 
+# PostgreSQL support (optional import)
+try:
+    from langgraph.checkpoint.postgres import PostgresSaver
+    POSTGRES_AVAILABLE = True
+except ImportError:
+    POSTGRES_AVAILABLE = False
 
-def get_checkpointer(
-    db_path: Optional[str] = None,
-    provider: str = "sqlite"
-):
+
+class DatabaseError(Exception):
+    """Custom exception for database configuration errors"""
+    pass
+
+
+def is_serverless_environment() -> bool:
     """
-    Get a checkpointer instance for persisting conversations
+    Detect if running in a serverless environment
+    Used only for warnings, not for logic
+    """
+    serverless_indicators = [
+        "VERCEL",
+        "AWS_LAMBDA_FUNCTION_NAME", 
+        "FUNCTIONS_WORKER_RUNTIME",  # GCP
+        "AZURE_FUNCTIONS_ENVIRONMENT",
+        "NETLIFY",
+        "RENDER",
+    ]
+    return any(os.getenv(indicator) for indicator in serverless_indicators)
+
+
+def validate_postgresql_url(db_url: str) -> None:
+    """
+    Validate that the URL is a valid PostgreSQL connection string
     
     Args:
-        db_path: Path to database file. If None, uses default
-        provider: Type of checkpointer (sqlite, postgres, memory)
+        db_url: Connection string to validate
+        
+    Raises:
+        DatabaseError: If URL is not valid PostgreSQL
+    """
+    if not db_url:
+        raise DatabaseError("Database URL cannot be empty")
+    
+    # Accept both postgresql:// and postgres://
+    valid_schemes = ['postgresql', 'postgres']
+    
+    try:
+        parsed = urlparse(db_url)
+        if parsed.scheme not in valid_schemes:
+            raise DatabaseError(
+                f"Only PostgreSQL is supported. Got: {parsed.scheme}://...\n"
+                f"Expected: postgresql://user:pass@host:port/database"
+            )
+    except Exception as e:
+        raise DatabaseError(f"Invalid database URL: {e}")
+
+
+def get_checkpointer(
+    db_url: Optional[str] = None,
+    fallback_memory: bool = True
+) -> Optional[Any]:
+    """
+    Get appropriate checkpointer based on configuration
+    
+    Args:
+        db_url: PostgreSQL connection string or None for SQLite
+                Can also be set via DATABASE_URL environment variable
+        fallback_memory: If True, use MemorySaver in serverless without db_url
         
     Returns:
-        Checkpointer instance
+        Checkpointer instance (PostgresSaver, SmartCheckpointer, or MemorySaver)
+        
+    Raises:
+        DatabaseError: For invalid configurations
     """
-    if provider == "sqlite":
-        path = db_path or os.getenv("CORTEX_DB_PATH", "conversations.db")
-        conn = sqlite3.connect(path, check_same_thread=False)
-        return SmartCheckpointer(conn)
     
-    elif provider == "memory":
-        return MemorySaver()
+    # Check for db_url from parameter or environment
+    connection_string = db_url or os.getenv("DATABASE_URL")
     
+    # Case 1: PostgreSQL explicitly requested
+    if connection_string:
+        # Validate it's PostgreSQL
+        validate_postgresql_url(connection_string)
+        
+        # Check if PostgreSQL support is available
+        if not POSTGRES_AVAILABLE:
+            raise DatabaseError(
+                "PostgreSQL support not installed.\n"
+                "Install with: pip install 'cortex[postgres]'\n"
+                "Or: pip install langgraph-checkpoint-postgres psycopg[binary]"
+            )
+        
+        try:
+            # Works for local PostgreSQL, Supabase, RDS, CloudSQL, etc.
+            print(f"✅ Connecting to PostgreSQL database...")
+            checkpointer = PostgresSaver.from_conn_string(connection_string)
+            print(f"✅ Successfully connected to PostgreSQL")
+            return checkpointer
+        except Exception as e:
+            # Provide helpful error message
+            if "could not translate host name" in str(e):
+                raise DatabaseError(
+                    f"Could not connect to database host.\n"
+                    f"Check your connection string: {connection_string[:30]}...\n"
+                    f"Format: postgresql://user:pass@host:port/database"
+                )
+            elif "password authentication failed" in str(e):
+                raise DatabaseError(
+                    f"Database authentication failed.\n"
+                    f"Check your username and password in the connection string."
+                )
+            else:
+                raise DatabaseError(
+                    f"Failed to connect to PostgreSQL: {e}\n"
+                    f"Connection string: {connection_string[:30]}...\n"
+                    f"Format: postgresql://user:pass@host:port/database"
+                )
+    
+    # Case 2: No db_url provided - use SQLite or memory
     else:
-        raise ValueError(f"Unknown checkpointer provider: {provider}")
+        # Check if we're in serverless
+        if is_serverless_environment():
+            if fallback_memory:
+                warnings.warn(
+                    "\n⚠️  Running in serverless without database URL!\n"
+                    "Conversations will NOT persist between requests.\n"
+                    "For persistence, use: Client(db_url='postgresql://...') or set DATABASE_URL env variable\n"
+                    "Get free PostgreSQL from: https://supabase.com or https://neon.tech",
+                    UserWarning,
+                    stacklevel=2
+                )
+                return MemorySaver()
+            else:
+                raise DatabaseError(
+                    "Serverless environment requires a database URL for persistence.\n"
+                    "Options:\n"
+                    "1. Pass db_url: Client(db_url='postgresql://...')\n"
+                    "2. Set DATABASE_URL environment variable\n"
+                    "Get free PostgreSQL from:\n"
+                    "  • Supabase: https://supabase.com (500MB free)\n"
+                    "  • Neon: https://neon.tech (3GB free)\n"
+                    "  • Railway: https://railway.app ($5 credits)"
+                )
+        
+        # Local environment - use SQLite
+        else:
+            try:
+                print(f"✅ Using SQLite for local persistence (conversations.db)")
+                # Use the enhanced SmartCheckpointer for SQLite
+                db_path = os.getenv("CORTEX_DB_PATH", "conversations.db")
+                conn = sqlite3.connect(db_path, check_same_thread=False)
+                return SmartCheckpointer(conn)
+            except Exception as e:
+                # Fallback to basic SqliteSaver if SmartCheckpointer fails
+                warnings.warn(f"Using basic SqliteSaver: {e}")
+                return SqliteSaver.from_conn_string("conversations.db")
 
 
 class SmartCheckpointer(SqliteSaver):

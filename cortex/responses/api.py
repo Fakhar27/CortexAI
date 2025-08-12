@@ -17,25 +17,44 @@ class ResponsesAPI:
     methods for creating responses with conversation persistence.
     """
     
-    def __init__(self, db_path: Optional[str] = None):
+    def __init__(self, db_url: Optional[str] = None, db_path: Optional[str] = None):
         """
         Initialize the ResponsesAPI
         
         Args:
-            db_path: Optional path to database for persistence
+            db_url: PostgreSQL connection string for production/serverless.
+                   Can also be set via DATABASE_URL environment variable.
+                   Format: postgresql://user:pass@host:port/database
+            db_path: [DEPRECATED] Legacy parameter for SQLite path.
+                    Use db_url for PostgreSQL or leave empty for SQLite.
         """
         try:
-            # Validate db_path if provided
+            import os
+            from .persistence import DatabaseError
+            
+            # Handle legacy db_path parameter
             if db_path is not None:
-                import os
-                # Check if parent directory exists
-                parent_dir = os.path.dirname(db_path)
-                if parent_dir and not os.path.exists(parent_dir):
-                    raise ValueError(f"Database directory does not exist: {parent_dir}")
+                import warnings
+                warnings.warn(
+                    "db_path parameter is deprecated. "
+                    "Use db_url for PostgreSQL or leave empty for local SQLite.",
+                    DeprecationWarning,
+                    stacklevel=2
+                )
+                # For backwards compatibility, treat db_path as SQLite
+                if db_url is None:
+                    # Validate db_path if provided
+                    parent_dir = os.path.dirname(db_path)
+                    if parent_dir and not os.path.exists(parent_dir):
+                        raise ValueError(f"Database directory does not exist: {parent_dir}")
             
             # Initialize checkpointer with error handling
             try:
-                self.checkpointer = get_checkpointer(db_path)
+                self.checkpointer = get_checkpointer(db_url=db_url)
+                self.db_url = db_url
+            except DatabaseError as e:
+                # Re-raise database errors with original message
+                raise e
             except Exception as e:
                 raise RuntimeError(f"Failed to initialize database: {str(e)}")
             
@@ -45,8 +64,11 @@ class ResponsesAPI:
             except Exception as e:
                 raise RuntimeError(f"Failed to setup graph workflow: {str(e)}")
                 
+        except DatabaseError:
+            # Let DatabaseError pass through unchanged
+            raise
         except Exception as e:
-            # Re-raise with more context
+            # Re-raise with more context for other errors
             raise RuntimeError(f"ResponsesAPI initialization failed: {str(e)}")
     
     def _setup_graph(self) -> StateGraph:
