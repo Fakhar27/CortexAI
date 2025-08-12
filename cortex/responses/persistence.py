@@ -89,6 +89,11 @@ def get_checkpointer(
     # Check for db_url from parameter or environment
     connection_string = db_url or os.getenv("DATABASE_URL")
     
+    # Check for empty string explicitly (should fail, not default to SQLite)
+    # This handles both db_url="" and DATABASE_URL=""
+    if connection_string == "":
+        raise DatabaseError("Database URL cannot be empty")
+    
     # Case 1: PostgreSQL explicitly requested
     if connection_string:
         # Validate it's PostgreSQL
@@ -105,9 +110,12 @@ def get_checkpointer(
         try:
             # Works for local PostgreSQL, Supabase, RDS, CloudSQL, etc.
             print(f"✅ Connecting to PostgreSQL database...")
-            checkpointer = PostgresSaver.from_conn_string(connection_string)
+            
+            # Create a wrapper that maintains the connection
+            wrapper = PostgresCheckpointerWrapper(connection_string)
+            
             print(f"✅ Successfully connected to PostgreSQL")
-            return checkpointer
+            return wrapper
         except Exception as e:
             # Provide helpful error message
             if "could not translate host name" in str(e):
@@ -307,6 +315,63 @@ class SmartCheckpointer(SqliteSaver):
         # Let parent class handle main connection
         if hasattr(super(), 'close'):
             super().close()
+
+
+class PostgresCheckpointerWrapper:
+    """
+    Wrapper that maintains a PostgreSQL connection pool.
+    This solves the context manager closing issue and adds custom methods.
+    """
+    
+    def __init__(self, connection_string: str):
+        """Initialize and open the connection"""
+        self.connection_string = connection_string
+        
+        # Create and enter the context manager, keeping it alive
+        self._context_manager = PostgresSaver.from_conn_string(connection_string)
+        self._checkpointer = self._context_manager.__enter__()
+        
+        # Setup tables
+        try:
+            self._checkpointer.setup()
+        except Exception:
+            # Tables might already exist
+            pass
+    
+    def response_exists(self, response_id: str) -> bool:
+        """
+        Check if a response exists by checking if its thread has checkpoints.
+        For PostgreSQL, we check if we can find a checkpoint for this thread.
+        """
+        try:
+            # Try to get checkpoint using response_id as thread_id
+            config = {"configurable": {"thread_id": response_id}}
+            result = self._checkpointer.get_tuple(config)
+            return result is not None
+        except Exception:
+            return False
+    
+    def get_thread_for_response(self, response_id: str) -> Optional[str]:
+        """
+        Get the thread_id for a response.
+        For PostgreSQL, we assume response_id IS the thread_id for backward compatibility.
+        """
+        # Check if a checkpoint exists with this response_id as thread_id
+        if self.response_exists(response_id):
+            return response_id
+        return None
+    
+    def __getattr__(self, name):
+        """Delegate all other methods to the real checkpointer"""
+        return getattr(self._checkpointer, name)
+    
+    def __del__(self):
+        """Clean up the connection when the wrapper is destroyed"""
+        try:
+            if hasattr(self, '_context_manager'):
+                self._context_manager.__exit__(None, None, None)
+        except:
+            pass
 
 
 def get_no_op_checkpointer() -> None:
