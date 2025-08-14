@@ -79,10 +79,13 @@ class TestPersistenceLayer:
             else:
                 raise
     
-    def test_empty_string_validation(self):
-        """Test that empty string database URL is rejected"""
-        with pytest.raises(DatabaseError, match="Database URL cannot be empty"):
-            get_checkpointer(db_url="")
+    def test_empty_string_uses_default(self):
+        """Test that empty string database URL gracefully uses default"""
+        # Empty string should fall back to default SQLite
+        checkpointer = get_checkpointer(db_url="")
+        assert checkpointer is not None
+        # Should be using SQLite (SmartCheckpointer or SqliteSaver)
+        assert hasattr(checkpointer, 'conn') or hasattr(checkpointer, 'db_path')
     
     def test_invalid_database_urls(self):
         """Test that non-PostgreSQL URLs are rejected"""

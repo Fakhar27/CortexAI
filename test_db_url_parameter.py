@@ -29,7 +29,7 @@ def test_db_url_parameter():
     client = Client()
     
     try:
-        response1 = client.responses.create(
+        response1 = client.create(
             input="Hello, what database am I using?",
             model="command-r",
             store=True
@@ -38,7 +38,7 @@ def test_db_url_parameter():
         print(f"   Message: {response1['output'][0]['content'][0]['text'][:100]}...")
         
         # Test continuing conversation with SQLite
-        response2 = client.responses.create(
+        response2 = client.create(
             input="What was my first question?",
             model="command-r",
             previous_response_id=response1['id'],
@@ -57,7 +57,7 @@ def test_db_url_parameter():
         
         try:
             # Same client, but use PostgreSQL for this specific request
-            response3 = client.responses.create(
+            response3 = client.create(
                 input="Hello from PostgreSQL! Remember this message.",
                 model="command-r",
                 db_url=postgres_url,  # Override database for this request
@@ -67,7 +67,7 @@ def test_db_url_parameter():
             print(f"   Message: {response3['output'][0]['content'][0]['text'][:100]}...")
             
             # Continue conversation in PostgreSQL
-            response4 = client.responses.create(
+            response4 = client.create(
                 input="What database message did you just store?",
                 model="command-r",
                 db_url=postgres_url,  # Must specify same db_url to continue
@@ -78,7 +78,7 @@ def test_db_url_parameter():
             
             # Test 3: Switch back to SQLite for next request
             print("\n3. Testing switch back to SQLite...")
-            response5 = client.responses.create(
+            response5 = client.create(
                 input="Back to SQLite now",
                 model="command-r",
                 # No db_url specified, uses default SQLite
@@ -89,7 +89,7 @@ def test_db_url_parameter():
             # Test 4: Try to continue PostgreSQL conversation without db_url (should fail)
             print("\n4. Testing error handling...")
             try:
-                response6 = client.responses.create(
+                response6 = client.create(
                     input="Continue PostgreSQL conversation",
                     model="command-r",
                     previous_response_id=response3['id'],  # PostgreSQL response
@@ -114,7 +114,7 @@ def test_db_url_parameter():
     # Test 5: Test invalid db_url
     print("\n5. Testing invalid db_url...")
     try:
-        response_bad = client.responses.create(
+        response_bad = client.create(
             input="Test invalid URL",
             model="command-r",
             db_url="invalid://url",
@@ -127,7 +127,7 @@ def test_db_url_parameter():
     # Test 6: Test empty db_url
     print("\n6. Testing empty db_url...")
     try:
-        response_empty = client.responses.create(
+        response_empty = client.create(
             input="Test empty URL",
             model="command-r",
             db_url="",
@@ -163,7 +163,7 @@ def test_serverless_scenario():
     # Request 1: New client, new conversation
     print("\n1. First request (new client)...")
     client1 = Client()  # New client instance
-    response1 = client1.responses.create(
+    response1 = client1.create(
         input="First message in serverless",
         model="command-r",
         db_url=postgres_url,  # User passes their database
@@ -174,7 +174,7 @@ def test_serverless_scenario():
     # Request 2: New client, continue conversation
     print("\n2. Second request (new client, same user)...")
     client2 = Client()  # New client instance (simulating new request)
-    response2 = client2.responses.create(
+    response2 = client2.create(
         input="What was my first message?",
         model="command-r",
         db_url=postgres_url,  # Same user database
@@ -189,7 +189,7 @@ def test_serverless_scenario():
     client3 = Client()  # New client instance
     # In real scenario, this would be a different user's database
     # For testing, we'll just use a different conversation
-    response3 = client3.responses.create(
+    response3 = client3.create(
         input="I'm a different user",
         model="command-r",
         db_url=postgres_url,  # In reality, would be user2's database

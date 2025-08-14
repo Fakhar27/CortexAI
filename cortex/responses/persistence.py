@@ -89,10 +89,10 @@ def get_checkpointer(
     # Check for db_url from parameter or environment
     connection_string = db_url or os.getenv("DATABASE_URL")
     
-    # Check for empty string explicitly (should fail, not default to SQLite)
-    # This handles both db_url="" and DATABASE_URL=""
+    # Check for empty string - treat as "use default SQLite" for graceful handling
+    # This handles both db_url="" and DATABASE_URL=""  
     if connection_string == "":
-        raise DatabaseError("Database URL cannot be empty")
+        connection_string = None  # Treat empty string as None (use default)
     
     # Case 1: PostgreSQL explicitly requested
     if connection_string:

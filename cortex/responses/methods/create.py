@@ -5,6 +5,9 @@ import logging
 from typing import Dict, Any, Optional
 from langchain_core.messages import HumanMessage
 from cortex.models.registry import MODELS
+from ..persistence import get_checkpointer, DatabaseError
+from langgraph.graph import StateGraph, END
+from ..state import ResponsesState
 
 logger = logging.getLogger(__name__)
 
@@ -195,12 +198,13 @@ def create_response(
     temp_graph = None
     checkpointer_to_use = api_instance.checkpointer
     
+    # Treat empty string as None (use instance default)
+    if db_url == "":
+        db_url = None
+    
     if db_url is not None and db_url != api_instance.db_url:
         # User provided a different db_url for this request
         # Create a temporary checkpointer and graph for this request
-        from ..persistence import get_checkpointer, DatabaseError
-        from langgraph.graph import StateGraph, END
-        from ..state import ResponsesState
         
         try:
             logger.info(f"Creating temporary checkpointer for request-specific db_url")
