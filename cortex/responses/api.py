@@ -159,6 +159,7 @@ class ResponsesAPI:
         self,
         input: str,
         model: str = "cohere",
+        db_url: Optional[str] = None,
         previous_response_id: Optional[str] = None,
         instructions: Optional[str] = None,
         store: bool = True,
@@ -171,6 +172,7 @@ class ResponsesAPI:
         Args:
             input: User's message
             model: LLM model to use
+            db_url: Optional database URL for this request (overrides instance default)
             previous_response_id: ID to continue previous conversation
             instructions: System instructions for the assistant
             store: Whether to persist the conversation
@@ -185,6 +187,7 @@ class ResponsesAPI:
             api_instance=self,
             input=input,
             model=model,
+            db_url=db_url,
             previous_response_id=previous_response_id,
             instructions=instructions,
             store=store,

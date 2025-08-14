@@ -159,6 +159,7 @@ def create_response(
     api_instance,
     input: str,
     model: str = "cohere",
+    db_url: Optional[str] = None,
     previous_response_id: Optional[str] = None,
     instructions: Optional[str] = None,
     store: bool = True,
@@ -172,6 +173,7 @@ def create_response(
         api_instance: ResponsesAPI instance with graph
         input: User's message
         model: Which LLM to use
+        db_url: Optional database URL for this request (overrides instance default)
         previous_response_id: Continue previous conversation
         instructions: System prompt (ignored if continuing conversation)
         store: Whether to persist conversation
@@ -186,6 +188,51 @@ def create_response(
     if validation_error:
         logger.warning(f"Input validation failed: {validation_error['error']['message']}")
         return validation_error
+    
+    # Step 0.5: Handle request-specific db_url if provided
+    # This allows users in serverless environments to specify their database per request
+    use_temp_graph = False
+    temp_graph = None
+    checkpointer_to_use = api_instance.checkpointer
+    
+    if db_url is not None and db_url != api_instance.db_url:
+        # User provided a different db_url for this request
+        # Create a temporary checkpointer and graph for this request
+        from ..persistence import get_checkpointer, DatabaseError
+        from langgraph.graph import StateGraph, END
+        from ..state import ResponsesState
+        
+        try:
+            logger.info(f"Creating temporary checkpointer for request-specific db_url")
+            # Create temporary checkpointer with the request's db_url
+            temp_checkpointer = get_checkpointer(db_url=db_url)
+            checkpointer_to_use = temp_checkpointer
+            
+            # Create temporary graph with this checkpointer
+            workflow = StateGraph(ResponsesState)
+            workflow.add_node("generate", api_instance._generate_node)
+            workflow.set_entry_point("generate")
+            workflow.add_edge("generate", END)
+            temp_graph = workflow.compile(checkpointer=temp_checkpointer)
+            use_temp_graph = True
+            
+        except DatabaseError as e:
+            # Database configuration error - return appropriate error response
+            logger.error(f"Failed to create temporary checkpointer: {e}")
+            return _create_error_response(
+                str(e),
+                "invalid_request_error",
+                "db_url",
+                "invalid_database_url"
+            )
+        except Exception as e:
+            logger.error(f"Failed to create temporary graph: {e}")
+            return _create_error_response(
+                "Failed to connect to the specified database",
+                "api_error",
+                code="database_connection_error"
+            )
+    
     # Step 1: ID Generation
     # Always generate a new response_id for this response
     response_id = f"resp_{uuid.uuid4().hex[:12]}"
@@ -194,7 +241,7 @@ def create_response(
     if previous_response_id:
         try:
             # Check if the previous response exists in database
-            if not api_instance.checkpointer.response_exists(previous_response_id):
+            if not checkpointer_to_use.response_exists(previous_response_id):
                 logger.info(f"Previous response not found: {previous_response_id}")
                 return _create_error_response(
                     f"Response '{previous_response_id}' not found",
@@ -204,7 +251,7 @@ def create_response(
                 )
             
             # Get the thread_id that this response belongs to
-            thread_id = api_instance.checkpointer.get_thread_for_response(previous_response_id)
+            thread_id = checkpointer_to_use.get_thread_for_response(previous_response_id)
             if not thread_id:
                 # Fallback to using previous_response_id as thread_id
                 # This handles old conversations before we added tracking
@@ -249,14 +296,17 @@ def create_response(
     
     # Step 4: Graph Invocation with Comprehensive Error Handling
     try:
-        # Invoke the single graph with our state and config
+        # Use temporary graph if created, otherwise use instance graph
+        graph_to_use = temp_graph if use_temp_graph else api_instance.graph
+        
+        # Invoke the graph with our state and config
         # The SmartCheckpointer will:
         # 1. Load previous messages if thread_id exists (get_tuple)
         # 2. Run through the graph nodes
         # 3. Track response_id -> thread_id mapping
         # 4. Save ONLY if store=True (put method checks this)
-        logger.info(f"Invoking graph for response {response_id} with model {model}")
-        result = api_instance.graph.invoke(initial_state, config)
+        logger.info(f"Invoking graph for response {response_id} with model {model} using {'temporary' if use_temp_graph else 'instance'} graph")
+        result = graph_to_use.invoke(initial_state, config)
         
     except Exception as e:
         # Log the full error for debugging
