@@ -161,7 +161,7 @@ def _validate_create_inputs(input: str, model: str, temperature: float, metadata
 def create_response(
     api_instance,
     input: str,
-    model: str = "cohere",
+    model: str,
     db_url: Optional[str] = None,
     previous_response_id: Optional[str] = None,
     instructions: Optional[str] = None,

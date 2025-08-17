@@ -128,17 +128,19 @@ class ResponsesAPI:
                 # LLM invocation failed - create error message
                 error_msg = str(e).lower()
                 
-                # Check for specific error types
-                if any(keyword in error_msg for keyword in ['api_key', 'api key', 'authentication', 'unauthorized']):
-                    error_content = "Authentication failed. Please check your API key configuration."
-                elif any(keyword in error_msg for keyword in ['rate', 'limit', 'quota', 'too many']):
-                    error_content = "Rate limit exceeded. Please wait a moment and try again."
-                elif any(keyword in error_msg for keyword in ['timeout', 'timed out']):
-                    error_content = "Request timed out. The AI service is taking too long to respond."
-                elif any(keyword in error_msg for keyword in ['context', 'length', 'too long', 'token']):
-                    error_content = "Message too long. Please reduce the length of your input."
-                else:
-                    error_content = f"AI service error: {str(e)}"
+                # Import error handler here to avoid circular import
+                from .llm import handle_llm_error, get_model_config
+                
+                # Get provider from model config
+                try:
+                    config = get_model_config(state.get("model", "command-r"))
+                    provider = config.get("provider", "unknown")
+                except:
+                    provider = "unknown"
+                
+                # Get standardized error using the new handler
+                error_info = handle_llm_error(e, provider)
+                error_content = error_info['message']
                 
                 # Create an error response message
                 ai_response = AIMessage(content=f"Error: {error_content}")
@@ -158,7 +160,7 @@ class ResponsesAPI:
     def create(
         self,
         input: str,
-        model: str = "cohere",
+        model: str,
         db_url: Optional[str] = None,
         previous_response_id: Optional[str] = None,
         instructions: Optional[str] = None,
