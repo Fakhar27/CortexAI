@@ -78,7 +78,8 @@ class TestModelRegistry:
     
     def test_list_available_models(self):
         """Test listing available models with configuration status"""
-        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"}):
+        # Test with only OpenAI key set, clear others
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key", "GOOGLE_API_KEY": "", "COHERE_API_KEY": ""}, clear=True):
             models = list_available_models()
             
             # Should have multiple models
@@ -100,6 +101,11 @@ class TestModelRegistry:
             # Other providers without keys should show as not configured
             google_models = [m for m in models if m["provider"] == "google"]
             for model in google_models:
+                assert model["configured"] == False
+            
+            # Cohere models should also show as not configured
+            cohere_models = [m for m in models if m["provider"] == "cohere"]
+            for model in cohere_models:
                 assert model["configured"] == False
 
 
