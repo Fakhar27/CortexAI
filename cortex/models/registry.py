@@ -62,21 +62,21 @@ MODELS = {
         "model_name": "command-r",
         "temperature": 0.7,
         "max_tokens": 128000,
-        "api_key_env": "COHERE_API_KEY"
+        "api_key_env": "CO_API_KEY"
     },
     "command-r-plus": {
         "provider": "cohere",
         "model_name": "command-r-plus",
         "temperature": 0.7,
         "max_tokens": 128000,
-        "api_key_env": "COHERE_API_KEY"
+        "api_key_env": "CO_API_KEY"
     },
     "command": {
         "provider": "cohere",
         "model_name": "command",
         "temperature": 0.7,
         "max_tokens": 4096,
-        "api_key_env": "COHERE_API_KEY"
+        "api_key_env": "CO_API_KEY"
     },
     
     # Deprecated alias - kept for backward compatibility
@@ -85,7 +85,7 @@ MODELS = {
         "model_name": "command-r",
         "temperature": 0.7,
         "max_tokens": 128000,
-        "api_key_env": "COHERE_API_KEY",
+        "api_key_env": "CO_API_KEY",
         "_deprecated": True,
         "_replacement": "command-r"
     }

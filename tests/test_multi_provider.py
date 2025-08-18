@@ -55,7 +55,7 @@ class TestModelRegistry:
         for model in cohere_models:
             config = get_model_config(model)
             assert config["provider"] == "cohere"
-            assert config["api_key_env"] == "COHERE_API_KEY"
+            assert config["api_key_env"] == "CO_API_KEY"
     
     def test_deprecated_model_warning(self):
         """Test that deprecated 'cohere' alias shows warning"""
@@ -79,7 +79,7 @@ class TestModelRegistry:
     def test_list_available_models(self):
         """Test listing available models with configuration status"""
         # Test with only OpenAI key set, clear others
-        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key", "GOOGLE_API_KEY": "", "COHERE_API_KEY": ""}, clear=True):
+        with patch.dict(os.environ, {"OPENAI_API_KEY": "test-key", "GOOGLE_API_KEY": "", "CO_API_KEY": ""}, clear=True):
             models = list_available_models()
             
             # Should have multiple models
@@ -224,7 +224,7 @@ class TestMultiProviderIntegration:
     
     def test_cohere_model_selection(self, mock_llms):
         """Test that Cohere models route correctly"""
-        with patch.dict(os.environ, {"COHERE_API_KEY": "test-cohere-key"}):
+        with patch.dict(os.environ, {"CO_API_KEY": "test-cohere-key"}):
             llm = get_llm("command-r", temperature=0.3)
             
             mock_llms['cohere'].assert_called_once()

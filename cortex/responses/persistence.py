@@ -337,29 +337,114 @@ class PostgresCheckpointerWrapper:
         except Exception:
             # Tables might already exist
             pass
+            
+        # Create separate connection for response tracking (same as SmartCheckpointer)
+        import psycopg
+        self.tracking_conn = psycopg.connect(connection_string)
+        
+        # Create response tracking table
+        with self.tracking_conn.cursor() as cursor:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS response_tracking (
+                    response_id TEXT PRIMARY KEY,
+                    thread_id TEXT NOT NULL,
+                    was_stored BOOLEAN DEFAULT TRUE,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+        self.tracking_conn.commit()
     
     def response_exists(self, response_id: str) -> bool:
         """
-        Check if a response exists by checking if its thread has checkpoints.
-        For PostgreSQL, we check if we can find a checkpoint for this thread.
+        Check if a response exists and was stored
+        Uses our tracking connection for thread-safe access
+        
+        Args:
+            response_id: The response_id to check
+            
+        Returns:
+            True if exists and was stored, False otherwise
         """
-        try:
-            # Try to get checkpoint using response_id as thread_id
-            config = {"configurable": {"thread_id": response_id}}
-            result = self._checkpointer.get_tuple(config)
-            return result is not None
-        except Exception:
-            return False
+        with self.tracking_conn.cursor() as cursor:
+            # Check in our response tracking table
+            cursor.execute(
+                "SELECT was_stored FROM response_tracking WHERE response_id = %s",
+                (response_id,)
+            )
+            
+            result = cursor.fetchone()
+            # Response must exist AND have been stored (store=True)
+            return result is not None and result[0] == True
     
     def get_thread_for_response(self, response_id: str) -> Optional[str]:
         """
-        Get the thread_id for a response.
-        For PostgreSQL, we assume response_id IS the thread_id for backward compatibility.
+        Get the thread_id that a response_id belongs to
+        Uses our tracking connection for thread-safe access
+        
+        Args:
+            response_id: The response_id to look up
+            
+        Returns:
+            thread_id if found, None otherwise
         """
-        # Check if a checkpoint exists with this response_id as thread_id
-        if self.response_exists(response_id):
-            return response_id
-        return None
+        with self.tracking_conn.cursor() as cursor:
+            cursor.execute(
+                "SELECT thread_id FROM response_tracking WHERE response_id = %s",
+                (response_id,)
+            )
+            result = cursor.fetchone()
+            return result[0] if result else None
+    
+    def put(self, config, checkpoint, metadata, new_versions):
+        """
+        Override put to track response IDs in our tracking table
+        """
+        store = config.get("configurable", {}).get("store", True)
+        thread_id = config.get("configurable", {}).get("thread_id")
+        response_id = config.get("configurable", {}).get("response_id")
+        
+        if store:
+            # Save to database - let LangGraph handle its transaction
+            result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
+            
+            # Track this response_id -> thread_id mapping using our separate connection
+            if response_id and thread_id:
+                with self.tracking_conn.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO response_tracking (response_id, thread_id, was_stored) VALUES (%s, %s, %s) ON CONFLICT (response_id) DO UPDATE SET thread_id = EXCLUDED.thread_id, was_stored = EXCLUDED.was_stored",
+                        (response_id, thread_id, True)
+                    )
+                self.tracking_conn.commit()  # Safe - using our own connection/transaction
+            
+            return result
+        else:
+            # Don't save checkpoint, but track the response as unsaved
+            if response_id and thread_id:
+                with self.tracking_conn.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO response_tracking (response_id, thread_id, was_stored) VALUES (%s, %s, %s) ON CONFLICT (response_id) DO UPDATE SET thread_id = EXCLUDED.thread_id, was_stored = EXCLUDED.was_stored",
+                        (response_id, thread_id, False)
+                    )
+                self.tracking_conn.commit()  # Safe - using our own connection/transaction
+            
+            # Return a dummy response that prevents LangGraph from erroring
+            return {
+                "v": 1,
+                "ts": checkpoint.get("ts", ""),
+                "id": checkpoint.get("id", ""),
+                "checkpoint": checkpoint,
+                "metadata": metadata
+            }
+    
+    def close(self):
+        """
+        Close both connections properly
+        Important for cleanup and avoiding connection leaks
+        """
+        try:
+            self.tracking_conn.close()
+        except:
+            pass  # Ignore errors during cleanup
     
     def __getattr__(self, name):
         """Delegate all other methods to the real checkpointer"""
@@ -367,6 +452,11 @@ class PostgresCheckpointerWrapper:
     
     def __del__(self):
         """Clean up the connection when the wrapper is destroyed"""
+        try:
+            self.close()
+        except:
+            pass
+        
         try:
             if hasattr(self, '_context_manager'):
                 self._context_manager.__exit__(None, None, None)
