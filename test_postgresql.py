@@ -63,8 +63,6 @@ def test_postgresql_local():
     # Common local PostgreSQL URLs to try
     test_urls = [
         "postgresql://postgres:postgres@localhost:5432/cortex",
-        "postgresql://postgres:password@localhost:5432/cortex",
-        "postgresql://cortex:cortex@localhost:5432/cortex",
     ]
     
     for url in test_urls:

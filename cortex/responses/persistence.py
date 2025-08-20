@@ -321,15 +321,44 @@ class PostgresCheckpointerWrapper:
     """
     Wrapper that maintains a PostgreSQL connection pool.
     This solves the context manager closing issue and adds custom methods.
+    
+    IMPORTANT: Automatically detects and handles pooled connections (Supabase, PgBouncer)
+    by disabling prepared statements to avoid conflicts.
     """
     
     def __init__(self, connection_string: str):
         """Initialize and open the connection"""
         self.connection_string = connection_string
         
-        # Create and enter the context manager, keeping it alive
-        self._context_manager = PostgresSaver.from_conn_string(connection_string)
-        self._checkpointer = self._context_manager.__enter__()
+        # POOLER DETECTION: Check if using a connection pooler
+        # Connection poolers (PgBouncer/Supabase) typically use port 6543 or have 'pooler' in hostname
+        parsed = urlparse(connection_string)
+        is_pooled = (parsed.port == 6543 or ('pooler' in parsed.hostname.lower() if parsed.hostname else False))
+        
+        if is_pooled:
+            print("📌 Detected connection pooler - disabling prepared statements")
+        
+        import psycopg
+        
+        # Connection kwargs for pooled environments
+        connect_kwargs = {}
+        if is_pooled:
+            # THIS IS THE KEY FIX from the research report:
+            # Disable prepared statements to prevent "prepared statement already exists" errors
+            connect_kwargs['prepare_threshold'] = None  # No prepared statements
+            connect_kwargs['options'] = '-c statement_timeout=30000'  # 30 second timeout
+        
+        # MAIN FIX: Create PostgresSaver with pooler-safe connection
+        if is_pooled:
+            # For pooled connections, we need to create the connection manually
+            # with prepare_threshold=None, then pass it to PostgresSaver
+            conn = psycopg.connect(connection_string, **connect_kwargs)
+            self._context_manager = PostgresSaver(conn)
+            self._checkpointer = self._context_manager
+        else:
+            # For direct connections, use the normal approach
+            self._context_manager = PostgresSaver.from_conn_string(connection_string)
+            self._checkpointer = self._context_manager.__enter__()
         
         # Setup tables
         try:
@@ -337,10 +366,9 @@ class PostgresCheckpointerWrapper:
         except Exception:
             # Tables might already exist
             pass
-            
-        # Create separate connection for response tracking (same as SmartCheckpointer)
-        import psycopg
-        self.tracking_conn = psycopg.connect(connection_string)
+        
+        # Create separate connection for response tracking (also with pooler-safe settings)
+        self.tracking_conn = psycopg.connect(connection_string, **connect_kwargs)
         
         # Create response tracking table
         with self.tracking_conn.cursor() as cursor:
@@ -459,7 +487,17 @@ class PostgresCheckpointerWrapper:
         
         try:
             if hasattr(self, '_context_manager'):
-                self._context_manager.__exit__(None, None, None)
+                # Check if we're using pooled connection
+                parsed = urlparse(self.connection_string)
+                is_pooled = (parsed.port == 6543 or ('pooler' in parsed.hostname.lower() if parsed.hostname else False))
+                
+                if not is_pooled:
+                    # Only exit context manager for non-pooled connections
+                    self._context_manager.__exit__(None, None, None)
+                else:
+                    # For pooled connections, close the checkpointer's connection if it has one
+                    if hasattr(self._checkpointer, 'conn'):
+                        self._checkpointer.conn.close()
         except:
             pass
 

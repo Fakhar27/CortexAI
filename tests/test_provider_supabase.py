@@ -9,7 +9,7 @@ import time
 from cortex import Client
 
 # Direct Supabase URL
-SUPABASE_URL = "postgresql://postgres:Fakhar_27_1$@db.tqovtjyylrykgpehbfdl.supabase.co:5432/postgres"
+SUPABASE_URL = "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
 
 
 class TestProviderSupabase:
