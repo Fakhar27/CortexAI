@@ -333,26 +333,26 @@ class PostgresCheckpointerWrapper:
         # POOLER DETECTION: Check if using a connection pooler
         # Connection poolers (PgBouncer/Supabase) typically use port 6543 or have 'pooler' in hostname
         parsed = urlparse(connection_string)
-        is_pooled = (parsed.port == 6543 or ('pooler' in parsed.hostname.lower() if parsed.hostname else False))
+        self.is_pooled = (parsed.port == 6543 or ('pooler' in parsed.hostname.lower() if parsed.hostname else False))
         
-        if is_pooled:
+        if self.is_pooled:
             print("📌 Detected connection pooler - disabling prepared statements")
         
         import psycopg
         
-        # Connection kwargs for pooled environments
-        connect_kwargs = {}
-        if is_pooled:
+        # Store connection kwargs for later use in fresh connections
+        self.connect_kwargs = {}
+        if self.is_pooled:
             # THIS IS THE KEY FIX from the research report:
             # Disable prepared statements to prevent "prepared statement already exists" errors
-            connect_kwargs['prepare_threshold'] = None  # No prepared statements
-            connect_kwargs['options'] = '-c statement_timeout=30000'  # 30 second timeout
+            self.connect_kwargs['prepare_threshold'] = None  # No prepared statements
+            self.connect_kwargs['options'] = '-c statement_timeout=30000'  # 30 second timeout
         
         # MAIN FIX: Create PostgresSaver with pooler-safe connection
-        if is_pooled:
+        if self.is_pooled:
             # For pooled connections, we need to create the connection manually
             # with prepare_threshold=None, then pass it to PostgresSaver
-            conn = psycopg.connect(connection_string, **connect_kwargs)
+            conn = psycopg.connect(connection_string, **self.connect_kwargs)
             self._context_manager = PostgresSaver(conn)
             self._checkpointer = self._context_manager
         else:
@@ -367,25 +367,24 @@ class PostgresCheckpointerWrapper:
             # Tables might already exist
             pass
         
-        # Create separate connection for response tracking (also with pooler-safe settings)
-        self.tracking_conn = psycopg.connect(connection_string, **connect_kwargs)
-        
-        # Create response tracking table
-        with self.tracking_conn.cursor() as cursor:
-            cursor.execute("""
-                CREATE TABLE IF NOT EXISTS response_tracking (
-                    response_id TEXT PRIMARY KEY,
-                    thread_id TEXT NOT NULL,
-                    was_stored BOOLEAN DEFAULT TRUE,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-            """)
-        self.tracking_conn.commit()
+        # Create response tracking table using a fresh connection
+        # IMPORTANT: We don't store this connection - use it and close it
+        with psycopg.connect(connection_string, **self.connect_kwargs) as temp_conn:
+            with temp_conn.cursor() as cursor:
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS response_tracking (
+                        response_id TEXT PRIMARY KEY,
+                        thread_id TEXT NOT NULL,
+                        was_stored BOOLEAN DEFAULT TRUE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+            temp_conn.commit()
     
     def response_exists(self, response_id: str) -> bool:
         """
         Check if a response exists and was stored
-        Uses our tracking connection for thread-safe access
+        Uses fresh connection for pooler compatibility
         
         Args:
             response_id: The response_id to check
@@ -393,21 +392,25 @@ class PostgresCheckpointerWrapper:
         Returns:
             True if exists and was stored, False otherwise
         """
-        with self.tracking_conn.cursor() as cursor:
-            # Check in our response tracking table
-            cursor.execute(
-                "SELECT was_stored FROM response_tracking WHERE response_id = %s",
-                (response_id,)
-            )
-            
-            result = cursor.fetchone()
-            # Response must exist AND have been stored (store=True)
-            return result is not None and result[0] == True
+        import psycopg
+        
+        # Create fresh connection for this operation
+        with psycopg.connect(self.connection_string, **self.connect_kwargs) as conn:
+            with conn.cursor() as cursor:
+                # Check in our response tracking table
+                cursor.execute(
+                    "SELECT was_stored FROM response_tracking WHERE response_id = %s",
+                    (response_id,)
+                )
+                
+                result = cursor.fetchone()
+                # Response must exist AND have been stored (store=True)
+                return result is not None and result[0] == True
     
     def get_thread_for_response(self, response_id: str) -> Optional[str]:
         """
         Get the thread_id that a response_id belongs to
-        Uses our tracking connection for thread-safe access
+        Uses fresh connection for pooler compatibility
         
         Args:
             response_id: The response_id to look up
@@ -415,18 +418,25 @@ class PostgresCheckpointerWrapper:
         Returns:
             thread_id if found, None otherwise
         """
-        with self.tracking_conn.cursor() as cursor:
-            cursor.execute(
-                "SELECT thread_id FROM response_tracking WHERE response_id = %s",
-                (response_id,)
-            )
-            result = cursor.fetchone()
-            return result[0] if result else None
+        import psycopg
+        
+        # Create fresh connection for this operation
+        with psycopg.connect(self.connection_string, **self.connect_kwargs) as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT thread_id FROM response_tracking WHERE response_id = %s",
+                    (response_id,)
+                )
+                result = cursor.fetchone()
+                return result[0] if result else None
     
     def put(self, config, checkpoint, metadata, new_versions):
         """
         Override put to track response IDs in our tracking table
+        Uses fresh connections for pooler compatibility
         """
+        import psycopg
+        
         store = config.get("configurable", {}).get("store", True)
         thread_id = config.get("configurable", {}).get("thread_id")
         response_id = config.get("configurable", {}).get("response_id")
@@ -435,25 +445,27 @@ class PostgresCheckpointerWrapper:
             # Save to database - let LangGraph handle its transaction
             result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
             
-            # Track this response_id -> thread_id mapping using our separate connection
+            # Track this response_id -> thread_id mapping using fresh connection
             if response_id and thread_id:
-                with self.tracking_conn.cursor() as cursor:
-                    cursor.execute(
-                        "INSERT INTO response_tracking (response_id, thread_id, was_stored) VALUES (%s, %s, %s) ON CONFLICT (response_id) DO UPDATE SET thread_id = EXCLUDED.thread_id, was_stored = EXCLUDED.was_stored",
-                        (response_id, thread_id, True)
-                    )
-                self.tracking_conn.commit()  # Safe - using our own connection/transaction
+                with psycopg.connect(self.connection_string, **self.connect_kwargs) as conn:
+                    with conn.cursor() as cursor:
+                        cursor.execute(
+                            "INSERT INTO response_tracking (response_id, thread_id, was_stored) VALUES (%s, %s, %s) ON CONFLICT (response_id) DO UPDATE SET thread_id = EXCLUDED.thread_id, was_stored = EXCLUDED.was_stored",
+                            (response_id, thread_id, True)
+                        )
+                    conn.commit()
             
             return result
         else:
             # Don't save checkpoint, but track the response as unsaved
             if response_id and thread_id:
-                with self.tracking_conn.cursor() as cursor:
-                    cursor.execute(
-                        "INSERT INTO response_tracking (response_id, thread_id, was_stored) VALUES (%s, %s, %s) ON CONFLICT (response_id) DO UPDATE SET thread_id = EXCLUDED.thread_id, was_stored = EXCLUDED.was_stored",
-                        (response_id, thread_id, False)
-                    )
-                self.tracking_conn.commit()  # Safe - using our own connection/transaction
+                with psycopg.connect(self.connection_string, **self.connect_kwargs) as conn:
+                    with conn.cursor() as cursor:
+                        cursor.execute(
+                            "INSERT INTO response_tracking (response_id, thread_id, was_stored) VALUES (%s, %s, %s) ON CONFLICT (response_id) DO UPDATE SET thread_id = EXCLUDED.thread_id, was_stored = EXCLUDED.was_stored",
+                            (response_id, thread_id, False)
+                        )
+                    conn.commit()
             
             # Return a dummy response that prevents LangGraph from erroring
             return {
@@ -466,13 +478,11 @@ class PostgresCheckpointerWrapper:
     
     def close(self):
         """
-        Close both connections properly
-        Important for cleanup and avoiding connection leaks
+        No tracking connection to close anymore (using fresh connections)
+        Main checkpointer cleanup handled in __del__
         """
-        try:
-            self.tracking_conn.close()
-        except:
-            pass  # Ignore errors during cleanup
+        # No persistent tracking_conn to close - we use fresh connections now
+        pass
     
     def __getattr__(self, name):
         """Delegate all other methods to the real checkpointer"""
@@ -487,11 +497,7 @@ class PostgresCheckpointerWrapper:
         
         try:
             if hasattr(self, '_context_manager'):
-                # Check if we're using pooled connection
-                parsed = urlparse(self.connection_string)
-                is_pooled = (parsed.port == 6543 or ('pooler' in parsed.hostname.lower() if parsed.hostname else False))
-                
-                if not is_pooled:
+                if not self.is_pooled:
                     # Only exit context manager for non-pooled connections
                     self._context_manager.__exit__(None, None, None)
                 else:
