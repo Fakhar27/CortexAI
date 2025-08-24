@@ -86,13 +86,13 @@ def get_checkpointer(
         DatabaseError: For invalid configurations
     """
     
-    # Check for db_url from parameter or environment
-    connection_string = db_url or os.getenv("DATABASE_URL")
-    
-    # Check for empty string - treat as "use default SQLite" for graceful handling
-    # This handles both db_url="" and DATABASE_URL=""  
-    if connection_string == "":
-        connection_string = None  # Treat empty string as None (use default)
+    # FIXED: Properly distinguish between "not passed" vs "explicitly passed"
+    if db_url is not None:
+        # Parameter was explicitly passed (could be empty string)
+        connection_string = db_url if db_url != "" else None
+    else:
+        # Parameter was NOT passed at all - check environment
+        connection_string = os.getenv("DATABASE_URL")
     
     # Case 1: PostgreSQL explicitly requested
     if connection_string:
@@ -264,6 +264,10 @@ class SmartCheckpointer(SqliteSaver):
         
         This is called by LangGraph after processing to save state
         """
+        # CRITICAL FIX: Ensure checkpoint_ns exists for LangGraph compatibility
+        if "checkpoint_ns" not in config.get("configurable", {}):
+            config.setdefault("configurable", {})["checkpoint_ns"] = ""
+        
         # Extract needed values
         store = config.get("configurable", {}).get("store", True)
         thread_id = config.get("configurable", {}).get("thread_id")
@@ -328,15 +332,19 @@ class PostgresCheckpointerWrapper:
     
     def __init__(self, connection_string: str):
         """Initialize and open the connection"""
+        # CRITICAL FIX: Use the EXACT connection string without modification
+        # The URL parsing was changing aws-1 to aws-0 and port 6543 to 5432!
         self.connection_string = connection_string
         
-        # POOLER DETECTION: Check if using a connection pooler
-        # Connection poolers (PgBouncer/Supabase) typically use port 6543 or have 'pooler' in hostname
-        parsed = urlparse(connection_string)
-        self.is_pooled = (parsed.port == 6543 or ('pooler' in parsed.hostname.lower() if parsed.hostname else False))
+        # HARDCODE Supabase pooler detection for now
+        # If it contains 'pooler.supabase.com:6543', it's a pooler
+        self.is_pooled = ('pooler.supabase.com:6543' in connection_string or 
+                         'pooler.supabase.com:5432' in connection_string or
+                         ':6543' in connection_string)
         
         if self.is_pooled:
             print("📌 Detected connection pooler - disabling prepared statements")
+            print(f"   Using exact URL: {connection_string[:60]}...")
         
         import psycopg
         
@@ -348,17 +356,8 @@ class PostgresCheckpointerWrapper:
             self.connect_kwargs['prepare_threshold'] = None  # No prepared statements
             self.connect_kwargs['options'] = '-c statement_timeout=30000'  # 30 second timeout
         
-        # MAIN FIX: Create PostgresSaver with pooler-safe connection
-        if self.is_pooled:
-            # For pooled connections, we need to create the connection manually
-            # with prepare_threshold=None, then pass it to PostgresSaver
-            conn = psycopg.connect(connection_string, **self.connect_kwargs)
-            self._context_manager = PostgresSaver(conn)
-            self._checkpointer = self._context_manager
-        else:
-            # For direct connections, use the normal approach
-            self._context_manager = PostgresSaver.from_conn_string(connection_string)
-            self._checkpointer = self._context_manager.__enter__()
+        # Initialize connection
+        self._initialize_connection()
         
         # Setup tables
         try:
@@ -369,6 +368,7 @@ class PostgresCheckpointerWrapper:
         
         # Create response tracking table using a fresh connection
         # IMPORTANT: We don't store this connection - use it and close it
+        import psycopg
         with psycopg.connect(connection_string, **self.connect_kwargs) as temp_conn:
             with temp_conn.cursor() as cursor:
                 cursor.execute("""
@@ -380,6 +380,73 @@ class PostgresCheckpointerWrapper:
                     )
                 """)
             temp_conn.commit()
+    
+    def _initialize_connection(self):
+        """Initialize or reinitialize the database connection"""
+        import psycopg
+        
+        # MAIN FIX: Create PostgresSaver with pooler-safe connection
+        if self.is_pooled:
+            # For pooled connections, we need to create the connection manually
+            # with prepare_threshold=None, then pass it to PostgresSaver
+            conn = psycopg.connect(self.connection_string, **self.connect_kwargs)
+            
+            # Create a wrapper that disables pipeline mode for pooled connections
+            class PoolerSafePostgresSaver(PostgresSaver):
+                """PostgresSaver that doesn't use pipeline mode (incompatible with poolers)"""
+                
+                def _cursor(self, *, pipeline: bool = False):
+                    """Override to disable pipeline mode for pooled connections"""
+                    # CRITICAL: Force pipeline=False for pooled connections
+                    # Pipeline mode doesn't work with connection poolers
+                    return super()._cursor(pipeline=False)
+            
+            self._context_manager = PoolerSafePostgresSaver(conn)
+            self._checkpointer = self._context_manager
+            # Store the connection for health checks
+            self._conn = conn
+        else:
+            # For direct connections, use the normal approach
+            self._context_manager = PostgresSaver.from_conn_string(self.connection_string)
+            self._checkpointer = self._context_manager.__enter__()
+            self._conn = None  # Not needed for direct connections
+    
+    def _ensure_connection_healthy(self):
+        """Check connection health and reconnect if needed (for pooled connections)"""
+        if not self.is_pooled:
+            return  # Direct connections handle this themselves
+        
+        try:
+            # Try a simple query to check if connection is alive
+            if self._conn and not self._conn.closed:
+                with self._conn.cursor() as cursor:
+                    cursor.execute("SELECT 1")
+            else:
+                raise Exception("Connection is closed")
+        except Exception as e:
+            # Connection is dead, reconnect
+            print(f"   ⚠️ Connection lost ({str(e)[:50]}...), reconnecting...")
+            try:
+                # Close old connection if it exists
+                if hasattr(self, '_conn') and self._conn:
+                    try:
+                        self._conn.close()
+                    except:
+                        pass
+                
+                # Reinitialize connection (will use PoolerSafePostgresSaver for pooled)
+                self._initialize_connection()
+                
+                # Re-setup tables (in case they don't exist)
+                try:
+                    self._checkpointer.setup()
+                except:
+                    pass
+                
+                print(f"   ✅ Reconnected successfully")
+            except Exception as reconnect_error:
+                print(f"   ❌ Reconnection failed: {reconnect_error}")
+                raise
     
     def response_exists(self, response_id: str) -> bool:
         """
@@ -437,13 +504,52 @@ class PostgresCheckpointerWrapper:
         """
         import psycopg
         
+        # CRITICAL FIX: Ensure checkpoint_ns exists for PostgresSaver
+        if "checkpoint_ns" not in config.get("configurable", {}):
+            config.setdefault("configurable", {})["checkpoint_ns"] = ""
+        
         store = config.get("configurable", {}).get("store", True)
         thread_id = config.get("configurable", {}).get("thread_id")
         response_id = config.get("configurable", {}).get("response_id")
         
         if store:
+            # DEBUG: Log checkpoint saving attempt
+            print(f"\n🔍 DEBUG: Attempting to save checkpoint:")
+            print(f"   Thread ID: {thread_id}")
+            print(f"   Response ID: {response_id}")
+            print(f"   Config has checkpoint_ns: {'checkpoint_ns' in config.get('configurable', {})}")
+            
+            # OPTION B: Check connection health and reconnect if needed
+            self._ensure_connection_healthy()
+            
             # Save to database - let LangGraph handle its transaction
-            result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
+            try:
+                result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
+                print(f"   ✅ PostgresSaver.put() returned successfully")
+                
+                # CRITICAL FIX: For pooled connections, we need to explicitly commit!
+                # PostgresSaver doesn't auto-commit when given a connection object
+                if self.is_pooled and hasattr(self._checkpointer, 'conn'):
+                    self._checkpointer.conn.commit()
+                    print(f"   ✅ Explicitly committed transaction for pooled connection")
+            except Exception as e:
+                # If it's a connection error, try once more with reconnection
+                if self.is_pooled and ("SSL" in str(e) or "connection" in str(e).lower() or "closed" in str(e)):
+                    print(f"   ⚠️ Connection error detected, attempting reconnection...")
+                    self._ensure_connection_healthy()
+                    # Retry the operation
+                    try:
+                        result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
+                        print(f"   ✅ PostgresSaver.put() succeeded after reconnection")
+                        if self.is_pooled and hasattr(self._checkpointer, 'conn'):
+                            self._checkpointer.conn.commit()
+                            print(f"   ✅ Committed after reconnection")
+                    except Exception as retry_error:
+                        print(f"   ❌ PostgresSaver.put() failed even after reconnection: {retry_error}")
+                        raise
+                else:
+                    print(f"   ❌ PostgresSaver.put() failed: {e}")
+                    raise
             
             # Track this response_id -> thread_id mapping using fresh connection
             if response_id and thread_id:
@@ -496,6 +602,13 @@ class PostgresCheckpointerWrapper:
             pass
         
         try:
+            # Close our stored connection reference if it exists
+            if hasattr(self, '_conn') and self._conn:
+                try:
+                    self._conn.close()
+                except:
+                    pass
+            
             if hasattr(self, '_context_manager'):
                 if not self.is_pooled:
                     # Only exit context manager for non-pooled connections
@@ -503,7 +616,10 @@ class PostgresCheckpointerWrapper:
                 else:
                     # For pooled connections, close the checkpointer's connection if it has one
                     if hasattr(self._checkpointer, 'conn'):
-                        self._checkpointer.conn.close()
+                        try:
+                            self._checkpointer.conn.close()
+                        except:
+                            pass
         except:
             pass
 

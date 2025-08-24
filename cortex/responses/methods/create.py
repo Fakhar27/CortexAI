@@ -290,11 +290,13 @@ def create_response(
     
     # Step 4: Graph Invocation with Smart Checkpointer
     # Configure with thread_id, store flag, AND response_id
+    # CRITICAL FIX: Include checkpoint_ns for PostgresSaver compatibility
     config = {
         "configurable": {
             "thread_id": thread_id,
             "response_id": response_id,  # Pass this so checkpointer can track it
-            "store": store  # Pass store flag to SmartCheckpointer
+            "store": store,  # Pass store flag to SmartCheckpointer
+            "checkpoint_ns": ""  # Required by PostgresSaver - empty string for default namespace
         }
     }
     
