@@ -20,3 +20,6 @@ uvicorn>=0.23.0
 # Utilities
 pydantic>=2.0.0
 python-dotenv>=1.0.0
+
+langgraph-checkpoint-postgres
+psycopg[binary]
