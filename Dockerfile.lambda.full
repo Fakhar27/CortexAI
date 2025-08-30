@@ -1,0 +1,32 @@
+# Use AWS Lambda Python runtime with build tools
+FROM public.ecr.aws/lambda/python:3.11
+
+# Install build dependencies for numpy and other packages
+RUN yum update -y && \
+    yum groupinstall -y "Development Tools" && \
+    yum install -y \
+    python3-devel \
+    gcc \
+    gcc-c++ \
+    make \
+    postgresql-devel \
+    && yum clean all
+
+# Upgrade pip
+RUN pip install --upgrade pip
+
+# Copy and install requirements
+COPY requirements-lambda.txt ${LAMBDA_TASK_ROOT}/
+RUN pip install --no-cache-dir -r requirements-lambda.txt
+
+# If langchain-community is needed, install it separately with pre-built numpy
+RUN pip install --no-cache-dir numpy==2.0.2 langchain-community==0.3.27
+
+# Copy cortex package
+COPY cortex/ ${LAMBDA_TASK_ROOT}/cortex/
+
+# Copy lambda handler
+COPY lambda_handler.py ${LAMBDA_TASK_ROOT}/
+
+# Set the handler
+CMD ["lambda_handler.lambda_handler"]

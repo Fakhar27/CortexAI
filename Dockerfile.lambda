@@ -1,13 +1,15 @@
 # Use AWS Lambda Python runtime as base
 FROM public.ecr.aws/lambda/python:3.11
 
-# Install system dependencies needed for psycopg and other packages
-RUN yum install -y \
+# Update package manager and install system dependencies
+RUN yum update -y && \
+    yum install -y \
     gcc \
     gcc-c++ \
+    make \
     python3-devel \
     postgresql-devel \
-    libpq-devel \
+    postgresql-libs \
     && yum clean all
 
 # Copy requirements file
@@ -16,11 +18,11 @@ COPY requirements-lambda.txt ${LAMBDA_TASK_ROOT}/
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements-lambda.txt
 
-# Copy cortex package
+# Copy cortex package (forward slashes work on Windows Docker)
 COPY cortex/ ${LAMBDA_TASK_ROOT}/cortex/
 
 # Copy lambda handler
-COPY lambda_pooler_test.py ${LAMBDA_TASK_ROOT}/
+COPY lambda_handler.py ${LAMBDA_TASK_ROOT}/
 
 # Set the handler
-CMD ["lambda_pooler_test.lambda_handler"]
+CMD ["lambda_handler.lambda_handler"]
