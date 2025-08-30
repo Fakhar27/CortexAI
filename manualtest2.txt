@@ -1,0 +1,830 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Try the new cross-platform PowerShell https://aka.ms/pscore6
+
+PS E:\cortexAI> wsl
+Welcome to Ubuntu 24.04.2 LTS (GNU/Linux 5.15.153.1-microsoft-standard-WSL2 x86_64)
+
+ * Documentation:  https://help.ubuntu.com        
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sun Aug 31 00:41:18 PKT 2025
+
+  System load:  1.21                Processes:             45
+  Usage of /:   0.4% of 1006.85GB   Users logged in:       2
+  Memory usage: 47%                 IPv4 address for eth0: 172.30.250.93
+  Swap usage:   0%
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+This message is shown once a day. To disable it please create the
+/home/fakhar/.hushlogin file.
+cd fakhar@DESKTOP-9H42JH4:/mnt/e/cortexAI$ source env/bin/activate
+(env) fakhar@DESKTOP-9H42JH4:/mnt/e/cortexAI$ cd cortex/
+(env) fakhar@DESKTOP-9H42JH4:/mnt/e/cortexAI/cortex$ python manual_pooler_test.py 
+
+================================================================================
+ INTERACTIVE POOLER TEST
+================================================================================
+
+This tool allows you to test conversations with different backends and models.  
+
+Available backends:
+  - pooler : Supabase pooler (tests concurrency issues)
+  - local  : Local PostgreSQL
+  - sqlite : SQLite (default)
+
+Available models:
+  - gpt-4o-mini
+  - gemini-1.5-flash
+  - command-r
+  - claude-3-haiku
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gpt-4o-mini
+  Conversation ID: New conversation
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> my name is rogers and my favourite show is one piece
+
+================================================================================
+ MANUAL CONVERSATION TEST
+================================================================================
+[TEST] Parameters:
+  - Backend: pooler
+  - Model: gpt-4o-mini
+  - Message: my name is rogers and my favourite show is one piece...
+  - Instructions: Yes
+  - Previous Response ID: None (new conversation)
+[BACKEND] Using Pooler: aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+[TEST] Initializing client...
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+   Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+
+[TEST] Request parameters:
+  - model: gpt-4o-mini
+  - store: True
+  - temperature: 0.7
+  - instructions: You are a helpful assistant.
+
+[TEST] Making API call...
+
+================================================================================
+🚀 CORTEX API REQUEST PROCESSING
+================================================================================
+📝 Input: my name is rogers and my favourite show is one piece
+🤖 Model: gpt-4o-mini
+🔗 Previous Response: New conversation
+💾 Store: True
+🌡️ Temperature: 0.7
+✅ Input validation passed
+
+🔄 LANGGRAPH PROCESSING
+   Response ID: resp_3e2316f42844
+   Thread ID: resp_3e2316f42844
+   Model: gpt-4o-mini
+   🎯 Invoking LangGraph workflow...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_3e2316f42844
+   Response ID: resp_3e2316f42844
+
+🧠 LLM GENERATION NODE
+   Model: gpt-4o-mini
+   Config has checkpoint_ns: True
+   Temperature: 0.7
+   Messages in state: 1
+   🔒 Acquiring lock for pooled connection save...
+   ❌ PostgresSaver.put() failed: failed to enter pipeline mode
+   🔓 Released lock for pooled connection
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_3e2316f42844
+   Response ID: resp_3e2316f42844
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ⚠️ Connection lost (sending query failed: cannot enter pipeline mode, ...), reconnecting...
+   ✅ Reconnected successfully
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   Instructions: Yes
+   Total messages to LLM: 2
+   📜 Conversation history:
+      [System]: You are a helpful assistant....
+      [Human]: my name is rogers and my favourite show is one piece...
+   🚀 Invoking gpt-4o-mini LLM...
+   ✅ LLM responded: Nice to meet you, Rogers! "One Piece" is an amazing show with a rich story and fantastic characters....
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_3e2316f42844
+   Response ID: resp_3e2316f42844
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+Graph invocation failed for response resp_3e2316f42844: failed to enter pipeline mode
+Traceback (most recent call last):
+  File "/mnt/e/cortexAI/cortex/cortex/responses/methods/create.py", line 341, in create_response
+    result = graph_to_use.invoke(initial_state, config)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/main.py", line 3019, in invoke
+    for chunk in self.stream(
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/main.py", line 2586, in stream
+    with SyncPregelLoop(
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_loop.py", line 1050, in __exit__
+    return self.stack.__exit__(exc_type, exc_value, traceback)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/contextlib.py", line 610, in __exit__
+    raise exc_details[1]
+  File "/usr/lib/python3.12/contextlib.py", line 595, in __exit__
+    if cb(*exc_details):
+       ^^^^^^^^^^^^^^^^
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_executor.py", line 118, in __exit__
+    task.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_executor.py", line 81, in done
+    task.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_loop.py", line 951, in _checkpointer_put_after_previous
+    prev.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_executor.py", line 81, in done
+    task.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_loop.py", line 951, in _checkpointer_put_after_previous
+    prev.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_executor.py", line 81, in done
+    task.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_loop.py", line 953, in _checkpointer_put_after_previous
+    cast(BaseCheckpointSaver, self.checkpointer).put(
+  File "/mnt/e/cortexAI/cortex/cortex/responses/persistence.py", line 537, in put
+    result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/checkpoint/postgres/__init__.py", line 314, in put
+    cur.executemany(
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/psycopg/cursor.py", line 127, in executemany
+    raise ex.with_traceback(None)
+psycopg.OperationalError: failed to enter pipeline mode
+
+[TEST] ✅ Response received in 14.14s
+  - Response ID: None
+  - Status: failed
+
+✅ Response ID saved: None
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gpt-4o-mini
+  Conversation ID: New conversation
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> my name is roger and my favourite show is one piece
+
+================================================================================
+ MANUAL CONVERSATION TEST
+================================================================================
+[TEST] Parameters:
+  - Backend: pooler
+  - Model: gpt-4o-mini
+  - Message: my name is roger and my favourite show is one piece...
+  - Instructions: Yes
+  - Previous Response ID: None (new conversation)
+[BACKEND] Using Pooler: aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+[TEST] Initializing client...
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+   Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+
+[TEST] Request parameters:
+  - model: gpt-4o-mini
+  - store: True
+  - temperature: 0.7
+  - instructions: You are a helpful assistant.
+
+[TEST] Making API call...
+
+================================================================================
+🚀 CORTEX API REQUEST PROCESSING
+================================================================================
+📝 Input: my name is roger and my favourite show is one piece
+🤖 Model: gpt-4o-mini
+🔗 Previous Response: New conversation
+💾 Store: True
+🌡️ Temperature: 0.7
+✅ Input validation passed
+
+🔄 LANGGRAPH PROCESSING
+   Response ID: resp_122ea79d5b13
+   Thread ID: resp_122ea79d5b13
+   Model: gpt-4o-mini
+   🎯 Invoking LangGraph workflow...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_122ea79d5b13
+   Response ID: resp_122ea79d5b13
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+
+🧠 LLM GENERATION NODE
+   Model: gpt-4o-mini
+   Temperature: 0.7
+   Messages in state: 1
+   Instructions: Yes
+   Total messages to LLM: 2
+   📜 Conversation history:
+      [System]: You are a helpful assistant....
+      [Human]: my name is roger and my favourite show is one piece...
+   🚀 Invoking gpt-4o-mini LLM...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_122ea79d5b13
+   Response ID: resp_122ea79d5b13
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   ✅ LLM responded: Hi Roger! One Piece is an amazing show with a rich world and fantastic characters. Who's your favori...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_122ea79d5b13
+   Response ID: resp_122ea79d5b13
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   ✅ LangGraph processing complete
+
+✨ RESPONSE COMPLETE
+   Response ID: resp_122ea79d5b13
+   Status: completed
+   Tokens: 42 (input: 14, output: 28)
+   Execution complete!
+================================================================================
+
+[TEST] ✅ Response received in 4.99s
+  - Response ID: resp_122ea79d5b13
+  - Status: completed
+
+[RESPONSE] Hi Roger! One Piece is an amazing show with a rich world and fantastic characters. Who's your favorite character from the series?
+
+✅ Response ID saved: resp_122ea79d5b13
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gpt-4o-mini
+  Conversation ID: resp_122ea79d5b13
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> /model gemini-1.5-flash 
+✅ Switched to model: gemini-1.5-flash
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gemini-1.5-flash
+  Conversation ID: resp_122ea79d5b13
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> who am i and what is my favourite show           
+
+================================================================================
+ MANUAL CONVERSATION TEST
+================================================================================
+[TEST] Parameters:
+  - Backend: pooler
+  - Model: gemini-1.5-flash
+  - Message: who am i and what is my favourite show...
+  - Instructions: Yes
+  - Previous Response ID: resp_122ea79d5b13
+[BACKEND] Using Pooler: aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+[TEST] Initializing client...
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+   Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+
+[TEST] Request parameters:
+  - model: gemini-1.5-flash
+  - store: True
+  - temperature: 0.7
+  - instructions: You are a helpful assistant.
+  - previous_response_id: resp_122ea79d5b13
+
+[TEST] Making API call...
+
+================================================================================
+🚀 CORTEX API REQUEST PROCESSING
+================================================================================
+📝 Input: who am i and what is my favourite show
+🤖 Model: gemini-1.5-flash
+🔗 Previous Response: resp_122ea79d5b13
+💾 Store: True
+🌡️ Temperature: 0.7
+✅ Input validation passed
+
+📚 LOADING CONVERSATION HISTORY
+   Looking for response: resp_122ea79d5b13
+   ✅ Response found in database
+   ✅ Thread ID: resp_122ea79d5b13
+
+🔄 LANGGRAPH PROCESSING
+   Response ID: resp_880ced868096
+   Thread ID: resp_122ea79d5b13
+   Model: gemini-1.5-flash
+   🎯 Invoking LangGraph workflow...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_122ea79d5b13
+   Response ID: resp_880ced868096
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+
+🧠 LLM GENERATION NODE
+   Model: gemini-1.5-flash
+   Temperature: 0.7
+   Messages in state: 3
+   ✅ PostgresSaver.put() returned successfully
+   Total messages to LLM: 3
+   📜 Conversation history:
+      [Human]: my name is roger and my favourite show is one piece...
+      [AI]: Hi Roger! One Piece is an amazing show with a rich world and fantastic character...
+      [Human]: who am i and what is my favourite show...
+   🚀 Invoking gemini-1.5-flash LLM...
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_122ea79d5b13
+   Response ID: resp_880ced868096
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ LLM responded: You are Roger, and your favorite show is One Piece....
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_122ea79d5b13
+   Response ID: resp_880ced868096
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   ✅ LangGraph processing complete
+
+✨ RESPONSE COMPLETE
+   Response ID: resp_880ced868096
+   Status: completed
+   Tokens: 24 (input: 11, output: 13)
+   Execution complete!
+================================================================================
+
+[TEST] ✅ Response received in 6.89s
+  - Response ID: resp_880ced868096
+  - Status: completed
+
+[RESPONSE] You are Roger, and your favorite show is One Piece.
+
+✅ Response ID saved: resp_880ced868096
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gemini-1.5-flash
+  Conversation ID: resp_880ced868096
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> /model command-r
+✅ Switched to model: command-r
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: command-r
+  Conversation ID: resp_880ced868096
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> what is my favourte show and i like purple color alot 
+
+================================================================================
+ MANUAL CONVERSATION TEST
+================================================================================
+[TEST] Parameters:
+  - Backend: pooler
+  - Model: command-r
+  - Message: what is my favourte show and i like purple color alot...
+  - Instructions: Yes
+  - Previous Response ID: resp_880ced868096
+[BACKEND] Using Pooler: aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+[TEST] Initializing client...
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+   Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+
+[TEST] Request parameters:
+  - model: command-r
+  - store: True
+  - temperature: 0.7
+  - instructions: You are a helpful assistant.
+  - previous_response_id: resp_880ced868096
+
+[TEST] Making API call...
+
+================================================================================
+🚀 CORTEX API REQUEST PROCESSING
+================================================================================
+📝 Input: what is my favourte show and i like purple color alot
+🤖 Model: command-r
+🔗 Previous Response: resp_880ced868096
+💾 Store: True
+🌡️ Temperature: 0.7
+✅ Input validation passed
+
+📚 LOADING CONVERSATION HISTORY
+   Looking for response: resp_880ced868096
+   ✅ Response found in database
+   ✅ Thread ID: resp_122ea79d5b13
+
+🔄 LANGGRAPH PROCESSING
+   Response ID: resp_36b07e9179a4
+   Thread ID: resp_122ea79d5b13
+   Model: command-r
+   🎯 Invoking LangGraph workflow...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_122ea79d5b13
+
+🧠 LLM GENERATION NODE
+   Response ID: resp_36b07e9179a4
+   Model: command-r
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   Temperature: 0.7
+   Messages in state: 5
+   ❌ PostgresSaver.put() failed: failed to enter pipeline mode
+   🔓 Released lock for pooled connection
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_122ea79d5b13
+   Response ID: resp_36b07e9179a4
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ⚠️ Connection lost (sending query failed: cannot enter pipeline mode, ...), reconnecting...
+   Total messages to LLM: 5
+   📜 Conversation history:
+      [Human]: who am i and what is my favourite show...
+      [AI]: You are Roger, and your favorite show is One Piece....
+      [Human]: what is my favourte show and i like purple color alot...
+   🚀 Invoking command-r LLM...
+   ✅ Reconnected successfully
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   ✅ LLM responded: Your favorite show is One Piece. The series has a vibrant and diverse cast of characters, and the wo...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_122ea79d5b13
+   Response ID: resp_36b07e9179a4
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+Graph invocation failed for response resp_36b07e9179a4: failed to enter pipeline mode
+Traceback (most recent call last):
+  File "/mnt/e/cortexAI/cortex/cortex/responses/methods/create.py", line 341, in create_response
+    result = graph_to_use.invoke(initial_state, config)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/main.py", line 3019, in invoke
+    for chunk in self.stream(
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/main.py", line 2586, in stream
+    with SyncPregelLoop(
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_loop.py", line 1050, in __exit__
+    return self.stack.__exit__(exc_type, exc_value, traceback)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/contextlib.py", line 610, in __exit__
+    raise exc_details[1]
+  File "/usr/lib/python3.12/contextlib.py", line 595, in __exit__
+    if cb(*exc_details):
+       ^^^^^^^^^^^^^^^^
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_executor.py", line 118, in __exit__
+    task.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_executor.py", line 81, in done
+    task.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_loop.py", line 951, in _checkpointer_put_after_previous
+    prev.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_executor.py", line 81, in done
+    task.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_loop.py", line 951, in _checkpointer_put_after_previous
+    prev.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 456, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_executor.py", line 81, in done
+    task.result()
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/concurrent/futures/_base.py", line 401, in __get_result
+    raise self._exception
+  File "/usr/lib/python3.12/concurrent/futures/thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/pregel/_loop.py", line 953, in _checkpointer_put_after_previous
+    cast(BaseCheckpointSaver, self.checkpointer).put(
+  File "/mnt/e/cortexAI/cortex/cortex/responses/persistence.py", line 537, in put
+    result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/langgraph/checkpoint/postgres/__init__.py", line 314, in put
+    cur.executemany(
+  File "/mnt/e/cortexAI/env/lib/python3.12/site-packages/psycopg/cursor.py", line 127, in executemany
+    raise ex.with_traceback(None)
+psycopg.OperationalError: failed to enter pipeline mode
+
+[TEST] ✅ Response received in 6.62s
+  - Response ID: None
+  - Status: failed
+
+✅ Response ID saved: None
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: command-r
+  Conversation ID: New conversation
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> i like purple color and what is my favourite show?
+
+================================================================================
+ MANUAL CONVERSATION TEST
+================================================================================
+[TEST] Parameters:
+  - Backend: pooler
+  - Model: command-r
+  - Message: i like purple color and what is my favourite show?...
+  - Instructions: Yes
+  - Previous Response ID: None (new conversation)
+[BACKEND] Using Pooler: aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+[TEST] Initializing client...
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+   Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+
+[TEST] Request parameters:
+  - model: command-r
+  - store: True
+  - temperature: 0.7
+  - instructions: You are a helpful assistant.
+
+[TEST] Making API call...
+
+================================================================================
+🚀 CORTEX API REQUEST PROCESSING
+================================================================================
+📝 Input: i like purple color and what is my favourite show?
+🤖 Model: command-r
+🔗 Previous Response: New conversation
+💾 Store: True
+🌡️ Temperature: 0.7
+✅ Input validation passed
+
+🔄 LANGGRAPH PROCESSING
+   Response ID: resp_fd90a1acc32a
+   Thread ID: resp_fd90a1acc32a
+   Model: command-r
+   🎯 Invoking LangGraph workflow...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_fd90a1acc32a
+   Response ID: resp_fd90a1acc32a
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+
+🧠 LLM GENERATION NODE
+   Model: command-r
+   Temperature: 0.7
+   Messages in state: 1
+   Instructions: Yes
+   Total messages to LLM: 2
+   📜 Conversation history:
+      [System]: You are a helpful assistant....
+      [Human]: i like purple color and what is my favourite show?...
+   🚀 Invoking command-r LLM...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_fd90a1acc32a
+   Response ID: resp_fd90a1acc32a
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   ✅ LLM responded: It's hard to pinpoint your favorite show without further context, but based on your appreciation for...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_fd90a1acc32a
+   Response ID: resp_fd90a1acc32a
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   ✅ LangGraph processing complete
+
+✨ RESPONSE COMPLETE
+   Response ID: resp_fd90a1acc32a
+   Status: completed
+   Tokens: 343 (input: 13, output: 330)
+   Execution complete!
+================================================================================
+
+[TEST] ✅ Response received in 5.54s
+  - Response ID: resp_fd90a1acc32a
+  - Status: completed
+
+[RESPONSE] It's hard to pinpoint your favorite show without further context, but based on your appreciation for the color purple, I can recommend a few shows that might resonate with you.
+
+- *The Purple Rose of...
+
+✅ Response ID saved: resp_fd90a1acc32a
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: command-r
+  Conversation ID: resp_fd90a1acc32a
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...

@@ -5,6 +5,7 @@ Supports SQLite (local) and PostgreSQL (production/serverless)
 import os
 import sqlite3
 import warnings
+import threading
 from typing import Optional, Dict, Any
 from urllib.parse import urlparse
 
@@ -346,6 +347,10 @@ class PostgresCheckpointerWrapper:
             print("📌 Detected connection pooler - disabling prepared statements")
             print(f"   Using exact URL: {connection_string[:60]}...")
         
+        # Initialize lock for pooled connections to prevent concurrent saves
+        # This prevents multiple LangGraph threads from hitting the pooler simultaneously
+        self._save_lock = threading.Lock() if self.is_pooled else None
+        
         import psycopg
         
         # Store connection kwargs for later use in fresh connections
@@ -519,37 +524,78 @@ class PostgresCheckpointerWrapper:
             print(f"   Response ID: {response_id}")
             print(f"   Config has checkpoint_ns: {'checkpoint_ns' in config.get('configurable', {})}")
             
-            # OPTION B: Check connection health and reconnect if needed
-            self._ensure_connection_healthy()
-            
-            # Save to database - let LangGraph handle its transaction
-            try:
-                result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
-                print(f"   ✅ PostgresSaver.put() returned successfully")
-                
-                # CRITICAL FIX: For pooled connections, we need to explicitly commit!
-                # PostgresSaver doesn't auto-commit when given a connection object
-                if self.is_pooled and hasattr(self._checkpointer, 'conn'):
-                    self._checkpointer.conn.commit()
-                    print(f"   ✅ Explicitly committed transaction for pooled connection")
-            except Exception as e:
-                # If it's a connection error, try once more with reconnection
-                if self.is_pooled and ("SSL" in str(e) or "connection" in str(e).lower() or "closed" in str(e)):
-                    print(f"   ⚠️ Connection error detected, attempting reconnection...")
+            # Use lock for pooled connections to prevent concurrent saves
+            # This prevents LangGraph's parallel threads from conflicting
+            if self._save_lock:
+                print(f"   🔒 Acquiring lock for pooled connection save...")
+                self._save_lock.acquire()
+                try:
+                    # OPTION B: Check connection health and reconnect if needed
                     self._ensure_connection_healthy()
-                    # Retry the operation
-                    try:
-                        result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
-                        print(f"   ✅ PostgresSaver.put() succeeded after reconnection")
-                        if self.is_pooled and hasattr(self._checkpointer, 'conn'):
-                            self._checkpointer.conn.commit()
-                            print(f"   ✅ Committed after reconnection")
-                    except Exception as retry_error:
-                        print(f"   ❌ PostgresSaver.put() failed even after reconnection: {retry_error}")
+                    
+                    # Save to database - let LangGraph handle its transaction
+                    result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
+                    print(f"   ✅ PostgresSaver.put() returned successfully")
+                    
+                    # CRITICAL FIX: For pooled connections, we need to explicitly commit!
+                    # PostgresSaver doesn't auto-commit when given a connection object
+                    if self.is_pooled and hasattr(self._checkpointer, 'conn'):
+                        self._checkpointer.conn.commit()
+                        print(f"   ✅ Explicitly committed transaction for pooled connection")
+                except Exception as e:
+                    # If it's a connection error, try once more with reconnection
+                    if self.is_pooled and ("SSL" in str(e) or "connection" in str(e).lower() or "closed" in str(e)):
+                        print(f"   ⚠️ Connection error detected, attempting reconnection...")
+                        self._ensure_connection_healthy()
+                        # Retry the operation
+                        try:
+                            result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
+                            print(f"   ✅ PostgresSaver.put() succeeded after reconnection")
+                            if self.is_pooled and hasattr(self._checkpointer, 'conn'):
+                                self._checkpointer.conn.commit()
+                                print(f"   ✅ Committed after reconnection")
+                        except Exception as retry_error:
+                            print(f"   ❌ PostgresSaver.put() failed even after reconnection: {retry_error}")
+                            raise
+                    else:
+                        print(f"   ❌ PostgresSaver.put() failed: {e}")
                         raise
-                else:
-                    print(f"   ❌ PostgresSaver.put() failed: {e}")
-                    raise
+                finally:
+                    self._save_lock.release()
+                    print(f"   🔓 Released lock for pooled connection")
+            else:
+                # Direct connection - no lock needed
+                # OPTION B: Check connection health and reconnect if needed
+                self._ensure_connection_healthy()
+                
+                # Save to database - let LangGraph handle its transaction
+                try:
+                    result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
+                    print(f"   ✅ PostgresSaver.put() returned successfully")
+                    
+                    # CRITICAL FIX: For pooled connections, we need to explicitly commit!
+                    # PostgresSaver doesn't auto-commit when given a connection object
+                    if self.is_pooled and hasattr(self._checkpointer, 'conn'):
+                        self._checkpointer.conn.commit()
+                        print(f"   ✅ Explicitly committed transaction for pooled connection")
+                except Exception as e:
+                    # If it's a connection error, try once more with reconnection
+                    if self.is_pooled and ("SSL" in str(e) or "connection" in str(e).lower() or "closed" in str(e)):
+                        print(f"   ⚠️ Connection error detected, attempting reconnection...")
+                        self._ensure_connection_healthy()
+                        # Retry the operation
+                        try:
+                            result = self._checkpointer.put(config, checkpoint, metadata, new_versions)
+                            print(f"   ✅ PostgresSaver.put() succeeded after reconnection")
+                            if self.is_pooled and hasattr(self._checkpointer, 'conn'):
+                                self._checkpointer.conn.commit()
+                                print(f"   ✅ Committed after reconnection")
+                        except Exception as retry_error:
+                            print(f"   ❌ PostgresSaver.put() failed even after reconnection: {retry_error}")
+                            raise
+                    else:
+                        print(f"   ❌ PostgresSaver.put() failed: {e}")
+                        raise
             
             # Track this response_id -> thread_id mapping using fresh connection
             if response_id and thread_id:

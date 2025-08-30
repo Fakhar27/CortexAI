@@ -13,9 +13,9 @@ langchain-anthropic==0.3.18
 
 # Database
 psycopg-binary==3.2.9
-psycopg2-binary==2.9.10
-SQLAlchemy==2.0.42
 
+SQLAlchemy==2.0.42
+numpy==1.26.4
 # Core dependencies
 pydantic==2.11.7
 pydantic-settings==2.10.1

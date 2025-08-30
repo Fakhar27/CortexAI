@@ -106,6 +106,11 @@ class ResponsesAPI:
             Updated state with AI response
         """
         try:
+            print(f"\n🧠 LLM GENERATION NODE")
+            print(f"   Model: {state.get('model')}")
+            print(f"   Temperature: {state.get('temperature', 0.7)}")
+            print(f"   Messages in state: {len(state.get('messages', []))}")
+            
             # Get the LLM based on model in state, with user's temperature
             # Extract temperature from initial request (passed through state)
             temperature = state.get("temperature")
@@ -117,13 +122,26 @@ class ResponsesAPI:
             # Add system message if instructions provided
             if state.get("instructions"):
                 messages.append(SystemMessage(content=state["instructions"]))
+                print(f"   Instructions: Yes")
             
             # Add conversation history (already has user's new message)
             messages.extend(state["messages"])
+            print(f"   Total messages to LLM: {len(messages)}")
+            
+            # Show conversation preview
+            if len(messages) > 1:
+                print(f"   📜 Conversation history:")
+                for i, msg in enumerate(messages[-3:]):  # Show last 3 messages
+                    role = msg.__class__.__name__.replace("Message", "")
+                    content_preview = str(msg.content)[:80] if hasattr(msg, 'content') else str(msg)[:80]
+                    print(f"      [{role}]: {content_preview}...")
             
             # Generate response with error handling
             try:
+                print(f"   🚀 Invoking {state.get('model')} LLM...")
                 ai_response = llm.invoke(messages)
+                response_preview = str(ai_response.content)[:100] if hasattr(ai_response, 'content') else str(ai_response)[:100]
+                print(f"   ✅ LLM responded: {response_preview}...")
             except Exception as e:
                 # LLM invocation failed - create error message
                 error_msg = str(e).lower()

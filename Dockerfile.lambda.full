@@ -1,32 +1,40 @@
-# Use AWS Lambda Python runtime with build tools
-FROM public.ecr.aws/lambda/python:3.11
+# Stage 1: The Builder
+# We add a few more common development libraries
+FROM public.ecr.aws/lambda/python:3.11 AS builder
 
-# Install build dependencies for numpy and other packages
+# Install build dependencies, including ones for cryptography and other common packages
 RUN yum update -y && \
-    yum groupinstall -y "Development Tools" && \
     yum install -y \
-    python3-devel \
     gcc \
     gcc-c++ \
     make \
     postgresql-devel \
+    libffi-devel \
+    openssl-devel \
     && yum clean all
 
-# Upgrade pip
-RUN pip install --upgrade pip
+# Copy only the requirements file
+COPY requirements-lambda.txt .
 
-# Copy and install requirements
-COPY requirements-lambda.txt ${LAMBDA_TASK_ROOT}/
-RUN pip install --no-cache-dir -r requirements-lambda.txt
+# Install packages into a specific directory. The --verbose flag gives more detailed logs.
+# Using --no-cache-dir can sometimes help with build issues.
+RUN pip install \
+    --target ./packages \
+    --no-cache-dir \
+    --verbose \
+    -r requirements-lambda.txt
 
-# If langchain-community is needed, install it separately with pre-built numpy
-RUN pip install --no-cache-dir numpy==2.0.2 langchain-community==0.3.27
+# ---
 
-# Copy cortex package
+# Stage 2: The Final, Lean Image
+FROM public.ecr.aws/lambda/python:3.11
+
+# Copy the pre-compiled packages from the builder stage
+COPY --from=builder /var/task/packages ${LAMBDA_TASK_ROOT}
+
+# Copy your application code
 COPY cortex/ ${LAMBDA_TASK_ROOT}/cortex/
-
-# Copy lambda handler
-COPY lambda_handler.py ${LAMBDA_TASK_ROOT}/
+COPY lambda_pooler_test.py ${LAMBDA_TASK_ROOT}/
 
 # Set the handler
-CMD ["lambda_handler.lambda_handler"]
+CMD ["lambda_pooler_test.lambda_handler"]
