@@ -12,8 +12,16 @@ from ..state import ResponsesState
 logger = logging.getLogger(__name__)
 
 
-def _create_error_response(message: str, error_type: str = "api_error", param: Optional[str] = None, code: Optional[str] = None) -> Dict[str, Any]:
-    """Create an OpenAI-compatible error response with full structure"""
+def _create_error_response(message: str, error_type: str = "api_error", param: Optional[str] = None, code: Optional[str] = None, response_id: Optional[str] = None) -> Dict[str, Any]:
+    """Create an OpenAI-compatible error response with full structure
+    
+    Args:
+        message: Error message
+        error_type: Type of error
+        param: Parameter that caused error
+        code: Error code
+        response_id: Response ID to include (for partial failures - allows conversation continuity)
+    """
     # Build error object
     error_obj = {
         "message": message,
@@ -27,7 +35,7 @@ def _create_error_response(message: str, error_type: str = "api_error", param: O
     
     # Return full response structure with error field populated
     return {
-        "id": None,
+        "id": response_id,  # Include response_id if provided (enables conversation continuity)
         "object": "response",
         "created_at": int(time.time()),
         "status": "failed",
@@ -300,26 +308,89 @@ def create_response(
         }
     }
     
+    # Step 3.5: Pre-emptive Response Tracking (Option C)
+    # Track the response_id BEFORE invoking LangGraph
+    # This ensures conversation continuity even if LangGraph fails
+    if store and checkpointer_to_use:
+        try:
+            print(f"\n📝 PRE-EMPTIVE RESPONSE TRACKING")
+            print(f"   Response ID: {response_id}")
+            print(f"   Thread ID: {thread_id}")
+            # Pre-register this response to ensure continuity
+            if hasattr(checkpointer_to_use, 'track_response'):
+                checkpointer_to_use.track_response(response_id, thread_id, was_stored=False)
+                print(f"   ✅ Response pre-registered for continuity")
+        except Exception as track_error:
+            # Non-critical - continue even if tracking fails
+            print(f"   ⚠️ Pre-tracking failed (non-critical): {track_error}")
+            pass
+    
     # Step 4: Graph Invocation with Comprehensive Error Handling
-    try:
-        # Use temporary graph if created, otherwise use instance graph
-        graph_to_use = temp_graph if use_temp_graph else api_instance.graph
+    max_retries = 2  # Try once, retry once if pipeline error
+    retry_count = 0
+    last_error = None
+    
+    while retry_count < max_retries:
+        try:
+            if retry_count > 0:
+                print(f"\n🔄 RETRY ATTEMPT {retry_count}/{max_retries-1}")
+                print(f"   Waiting 100ms before retry...")
+                import time
+                time.sleep(0.1)  # Wait 100ms before retry
+            
+            # Use temporary graph if created, otherwise use instance graph
+            graph_to_use = temp_graph if use_temp_graph else api_instance.graph
+            
+            # Invoke the graph with our state and config
+            # The SmartCheckpointer will:
+            # 1. Load previous messages if thread_id exists (get_tuple)
+            # 2. Run through the graph nodes
+            # 3. Track response_id -> thread_id mapping
+            # 4. Save ONLY if store=True (put method checks this)
+            logger.info(f"Invoking graph for response {response_id} with model {model} using {'temporary' if use_temp_graph else 'instance'} graph")
+            result = graph_to_use.invoke(initial_state, config)
+            
+            # Success! Break out of retry loop
+            if retry_count > 0:
+                print(f"   ✅ Retry successful!")
+            break
+            
+        except Exception as e:
+            # Store the error for potential retry or final handling
+            last_error = e
+            error_message = str(e).lower()
+            
+            # Check if this is a pipeline error and we should retry
+            if "pipeline mode" in error_message or "pipeline" in error_message:
+                retry_count += 1
+                if retry_count < max_retries:
+                    print(f"\n⚠️ Pipeline mode error detected - will retry")
+                    logger.info(f"Pipeline error on attempt {retry_count}, retrying...")
+                    continue  # Try again
+                else:
+                    # Max retries exceeded - fall through to error handling
+                    print(f"\n❌ Pipeline error persists after {max_retries} attempts")
+                    logger.error(f"Graph invocation failed after {max_retries} attempts: {str(e)}")
+            else:
+                # Not a pipeline error - don't retry, break out of loop
+                logger.error(f"Graph invocation failed for response {response_id}: {str(e)}", exc_info=True)
+                break
+    
+    # If we exit the loop without success, handle the error
+    if last_error:
+        error_message = str(last_error).lower()
         
-        # Invoke the graph with our state and config
-        # The SmartCheckpointer will:
-        # 1. Load previous messages if thread_id exists (get_tuple)
-        # 2. Run through the graph nodes
-        # 3. Track response_id -> thread_id mapping
-        # 4. Save ONLY if store=True (put method checks this)
-        logger.info(f"Invoking graph for response {response_id} with model {model} using {'temporary' if use_temp_graph else 'instance'} graph")
-        result = graph_to_use.invoke(initial_state, config)
-        
-    except Exception as e:
-        # Log the full error for debugging
-        logger.error(f"Graph invocation failed for response {response_id}: {str(e)}", exc_info=True)
-        
-        # Check for specific error types and provide appropriate responses
-        error_message = str(e).lower()
+        # CRITICAL: Pipeline mode errors - return WITH response_id for continuity
+        if "pipeline mode" in error_message or "pipeline" in error_message:
+            print(f"\n⚠️ PIPELINE MODE ERROR AFTER RETRIES - PRESERVING CONTINUITY")
+            print(f"   🆔 Returning error WITH response_id: {response_id}")
+            print(f"   📝 Conversation can continue from this point")
+            return _create_error_response(
+                "Database save partially failed after retries. The AI may have responded but checkpoint save failed. You can continue the conversation.",
+                "api_error",
+                code="pipeline_error",
+                response_id=response_id  # CRITICAL: Include response_id for continuity
+            )
         
         # Network/API errors
         if any(keyword in error_message for keyword in ['network', 'connection', 'timeout', 'unreachable']):
