@@ -1,0 +1,702 @@
+(env) fakhar@DESKTOP-9H42JH4:/mnt/e/cortexAI/cortex$ python manual_pooler_test.py 
+
+================================================================================
+ INTERACTIVE POOLER TEST
+================================================================================
+
+This tool allows you to test conversations with different backends and models.  
+
+Available backends:
+  - pooler : Supabase pooler (tests concurrency issues)
+  - local  : Local PostgreSQL
+  - sqlite : SQLite (default)
+
+Available models:
+  - gpt-4o-mini
+  - gemini-1.5-flash
+  - command-r
+  - claude-3-haiku
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gpt-4o-mini
+  Conversation ID: New conversation
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> my name is hassan and my favourite food is apples
+
+================================================================================
+ MANUAL CONVERSATION TEST
+================================================================================
+[TEST] Parameters:
+  - Backend: pooler
+  - Model: gpt-4o-mini
+  - Message: my name is hassan and my favourite food is apples...
+  - Instructions: Yes
+  - Previous Response ID: None (new conversation)
+[BACKEND] Using Pooler: aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+[TEST] Initializing client...
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+   Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+
+[TEST] Request parameters:
+  - model: gpt-4o-mini
+  - store: True
+  - temperature: 0.7
+  - instructions: You are a helpful assistant.
+
+[TEST] Making API call...
+
+📝 PRE-EMPTIVE RESPONSE TRACKING
+   Response ID: resp_db941c9be94c
+   Thread ID: resp_db941c9be94c
+   ✅ Response pre-registered for continuity
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_db941c9be94c
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+
+🧠 LLM GENERATION NODE
+   Model: gpt-4o-mini
+   Temperature: 0.7
+   Messages in state: 1
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_db941c9be94c
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   Instructions: Yes
+   Total messages to LLM: 2
+   📜 Conversation history:
+      [System]: You are a helpful assistant....
+      [Human]: my name is hassan and my favourite food is apples...
+   🚀 Invoking gpt-4o-mini LLM...
+   ✅ LLM responded: Nice to meet you, Hassan! Apples are a great choice—healthy and versatile! Do you have a favorite ty...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_db941c9be94c
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+[TEST] ✅ Response received in 23.56s
+  - Response ID: resp_db941c9be94c
+  - Status: completed
+
+[RESPONSE] Nice to meet you, Hassan! Apples are a great choice—healthy and versatile! Do you have a favorite type of apple or a favorite way to enjoy them?
+
+✅ Response ID saved: resp_db941c9be94c
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gpt-4o-mini
+  Conversation ID: resp_db941c9be94c
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> /model gemini-1.5-flash       
+✅ Switched to model: gemini-1.5-flash
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gemini-1.5-flash
+  Conversation ID: resp_db941c9be94c
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> who am i and what is my favourite food 
+
+================================================================================
+ MANUAL CONVERSATION TEST
+================================================================================
+[TEST] Parameters:
+  - Backend: pooler
+  - Model: gemini-1.5-flash
+  - Message: who am i and what is my favourite food...
+  - Instructions: Yes
+  - Previous Response ID: resp_db941c9be94c
+[BACKEND] Using Pooler: aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+[TEST] Initializing client...
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+   Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+
+[TEST] Request parameters:
+  - model: gemini-1.5-flash
+  - store: True
+  - temperature: 0.7
+  - instructions: You are a helpful assistant.
+  - previous_response_id: resp_db941c9be94c
+
+[TEST] Making API call...
+
+📝 PRE-EMPTIVE RESPONSE TRACKING
+   Response ID: resp_b1fc8d4a5e05
+   Thread ID: resp_db941c9be94c
+   ✅ Response pre-registered for continuity
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_b1fc8d4a5e05
+
+🧠 LLM GENERATION NODE
+   Model: gemini-1.5-flash
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   Temperature: 0.7
+   Messages in state: 3
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   Total messages to LLM: 3
+   📜 Conversation history:
+      [Human]: my name is hassan and my favourite food is apples...
+      [AI]: Nice to meet you, Hassan! Apples are a great choice—healthy and versatile! Do yo...
+      [Human]: who am i and what is my favourite food...
+   🚀 Invoking gemini-1.5-flash LLM...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_b1fc8d4a5e05
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   ✅ LLM responded: I do not know who you are or what your favorite food is.  I have no memory of past conversations.  T...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_b1fc8d4a5e05
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+[TEST] ✅ Response received in 8.18s
+  - Response ID: resp_b1fc8d4a5e05
+  - Status: completed
+
+[RESPONSE] I do not know who you are or what your favorite food is.  I have no memory of past conversations.  To answer your question, you will have to tell me.
+
+✅ Response ID saved: resp_b1fc8d4a5e05
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gemini-1.5-flash
+  Conversation ID: resp_b1fc8d4a5e05
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> /model command-r
+✅ Switched to model: command-r
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: command-r
+  Conversation ID: resp_b1fc8d4a5e05
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> who am i and what is my fvaourite food
+
+================================================================================
+ MANUAL CONVERSATION TEST
+================================================================================
+[TEST] Parameters:
+  - Backend: pooler
+  - Model: command-r
+  - Message: who am i and what is my fvaourite food...
+  - Instructions: Yes
+  - Previous Response ID: resp_b1fc8d4a5e05
+[BACKEND] Using Pooler: aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+[TEST] Initializing client...
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+   Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+
+[TEST] Request parameters:
+  - model: command-r
+  - store: True
+  - temperature: 0.7
+  - instructions: You are a helpful assistant.
+  - previous_response_id: resp_b1fc8d4a5e05
+
+[TEST] Making API call...
+
+📝 PRE-EMPTIVE RESPONSE TRACKING
+   Response ID: resp_13887c42324f
+   Thread ID: resp_db941c9be94c
+   ✅ Response pre-registered for continuity
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+
+🧠 LLM GENERATION NODE   Response ID: resp_13887c42324f
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+
+   Model: command-r
+   Temperature: 0.7
+   Messages in state: 5
+   Total messages to LLM: 5
+   📜 Conversation history:
+      [Human]: who am i and what is my favourite food...
+      [AI]: I do not know who you are or what your favorite food is.  I have no memory of pa...
+      [Human]: who am i and what is my fvaourite food...
+   🚀 Invoking command-r LLM...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_13887c42324f
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ LLM responded: You are Hassan and your favorite food is apples! 
+
+Apples are a delicious and nutritious fruit that ...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_13887c42324f
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+[TEST] ✅ Response received in 8.02s
+  - Response ID: resp_13887c42324f
+  - Status: completed
+
+[RESPONSE] You are Hassan and your favorite food is apples!
+
+Apples are a delicious and nutritious fruit that come in many varieties, such as Gala, Red Delicious, Granny Smith, and Golden Delicious. They're ver...
+
+✅ Response ID saved: resp_13887c42324f
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: command-r
+  Conversation ID: resp_13887c42324f
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> my best friend name is steve and my favourite car is ford 
+
+================================================================================
+ MANUAL CONVERSATION TEST
+================================================================================
+[TEST] Parameters:
+  - Backend: pooler
+  - Model: command-r
+  - Message: my best friend name is steve and my favourite car is ford...
+  - Instructions: Yes
+  - Previous Response ID: resp_13887c42324f
+[BACKEND] Using Pooler: aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+[TEST] Initializing client...
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+   Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+
+[TEST] Request parameters:
+  - model: command-r
+  - store: True
+  - temperature: 0.7
+  - instructions: You are a helpful assistant.
+  - previous_response_id: resp_13887c42324f
+
+[TEST] Making API call...
+
+📝 PRE-EMPTIVE RESPONSE TRACKING
+   Response ID: resp_da187837e5e0
+   Thread ID: resp_db941c9be94c
+   ✅ Response pre-registered for continuity
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_da187837e5e0
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+
+🧠 LLM GENERATION NODE
+   Model: command-r
+   Temperature: 0.7
+   Messages in state: 7
+   Total messages to LLM: 7
+   📜 Conversation history:
+      [Human]: who am i and what is my fvaourite food...
+      [AI]: You are Hassan and your favorite food is apples! 
+
+Apples are a delicious and nu...
+      [Human]: my best friend name is steve and my favourite car is ford...
+   🚀 Invoking command-r LLM...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   ✅ LLM responded: That's cool! Ford makes some iconic cars indeed, and it's fun to have a favorite. Perhaps you and yo...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_da187837e5e0
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_da187837e5e0
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+[TEST] ✅ Response received in 7.81s
+  - Response ID: resp_da187837e5e0
+  - Status: completed
+
+[RESPONSE] That's cool! Ford makes some iconic cars indeed, and it's fun to have a favorite. Perhaps you and your friend Steve have gone on many adventures in his Ford car! It would be fun to hear the stories of...
+
+✅ Response ID saved: resp_da187837e5e0
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: command-r
+  Conversation ID: resp_da187837e5e0
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> /model gpt-4o-mini
+✅ Switched to model: gpt-4o-mini
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gpt-4o-mini
+  Conversation ID: resp_da187837e5e0
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> who is my best friend and what is my name
+
+================================================================================
+ MANUAL CONVERSATION TEST
+================================================================================
+[TEST] Parameters:
+  - Backend: pooler
+  - Model: gpt-4o-mini
+  - Message: who is my best friend and what is my name...
+  - Instructions: Yes
+  - Previous Response ID: resp_da187837e5e0
+[BACKEND] Using Pooler: aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+[TEST] Initializing client...
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+   Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+
+[TEST] Request parameters:
+  - model: gpt-4o-mini
+  - store: True
+  - temperature: 0.7
+  - instructions: You are a helpful assistant.
+  - previous_response_id: resp_da187837e5e0
+
+[TEST] Making API call...
+
+📝 PRE-EMPTIVE RESPONSE TRACKING
+   Response ID: resp_a7d4580d68b4
+   Thread ID: resp_db941c9be94c
+   ✅ Response pre-registered for continuity
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_a7d4580d68b4
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+
+🧠 LLM GENERATION NODE
+   Model: gpt-4o-mini
+   Temperature: 0.7
+   Messages in state: 9
+   Total messages to LLM: 9
+   📜 Conversation history:
+      [Human]: my best friend name is steve and my favourite car is ford...
+      [AI]: That's cool! Ford makes some iconic cars indeed, and it's fun to have a favorite...
+      [Human]: who is my best friend and what is my name...
+   🚀 Invoking gpt-4o-mini LLM...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   ✅ LLM responded: Your name is Hassan, and your best friend is Steve! If there's anything else you'd like to share or ...
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_a7d4580d68b4
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_a7d4580d68b4
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+[TEST] ✅ Response received in 7.67s
+  - Response ID: resp_a7d4580d68b4
+  - Status: completed
+
+[RESPONSE] Your name is Hassan, and your best friend is Steve! If there's anything else you'd like to share or discuss, feel free to let me know!
+
+✅ Response ID saved: resp_a7d4580d68b4
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gpt-4o-mini
+  Conversation ID: resp_a7d4580d68b4
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> /model gemini-1.5-flash
+✅ Switched to model: gemini-1.5-flash
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gemini-1.5-flash
+  Conversation ID: resp_a7d4580d68b4
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...
+
+> what is my favourite food and car and what is my best friends name
+
+================================================================================
+ MANUAL CONVERSATION TEST
+================================================================================
+[TEST] Parameters:
+  - Backend: pooler
+  - Model: gemini-1.5-flash
+  - Message: what is my favourite food and car and what is my best friends name...
+  - Instructions: Yes
+  - Previous Response ID: resp_a7d4580d68b4
+[BACKEND] Using Pooler: aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+[TEST] Initializing client...
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+   Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+
+[TEST] Request parameters:
+  - model: gemini-1.5-flash
+  - store: True
+  - temperature: 0.7
+  - instructions: You are a helpful assistant.
+  - previous_response_id: resp_a7d4580d68b4
+
+[TEST] Making API call...
+
+📝 PRE-EMPTIVE RESPONSE TRACKING
+   Response ID: resp_61a5efebb283
+   Thread ID: resp_db941c9be94c
+   ✅ Response pre-registered for continuity
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_61a5efebb283
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+
+🧠 LLM GENERATION NODE
+   Model: gemini-1.5-flash
+   Temperature: 0.7
+   Messages in state: 11
+   Total messages to LLM: 11
+   📜 Conversation history:
+      [Human]: who is my best friend and what is my name...
+      [AI]: Your name is Hassan, and your best friend is Steve! If there's anything else you...
+      [Human]: what is my favourite food and car and what is my best friends name...
+   🚀 Invoking gemini-1.5-flash LLM...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+   ✅ LLM responded: Your favorite food is apples, your favorite car is a Ford, and your best friend's name is Steve....
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_61a5efebb283
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+🔍 DEBUG: Attempting to save checkpoint:
+   Thread ID: resp_db941c9be94c
+   Response ID: resp_61a5efebb283
+   Config has checkpoint_ns: True
+   🔒 Acquiring lock for pooled connection save...
+   ✅ PostgresSaver.put() returned successfully
+   ✅ Explicitly committed transaction for pooled connection
+   🔓 Released lock for pooled connection
+
+[TEST] ✅ Response received in 9.76s
+  - Response ID: resp_61a5efebb283
+  - Status: completed
+
+[RESPONSE] Your favorite food is apples, your favorite car is a Ford, and your best friend's name is Steve.
+
+✅ Response ID saved: resp_61a5efebb283
+================================================================================
+
+Current settings:
+  Backend: pooler
+  Model: gemini-1.5-flash
+  Conversation ID: resp_61a5efebb283
+
+Commands:
+  /backend <name>  - Switch backend (pooler/local/sqlite)
+  /model <name>    - Switch model
+  /new             - Start new conversation
+  /instructions    - Set system instructions
+  /test            - Test current setup with a simple message
+  /alternate       - Test alternating between GPT and Gemini
+  /quit            - Exit
+
+  Or just type your message...

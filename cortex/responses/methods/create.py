@@ -335,7 +335,6 @@ def create_response(
             if retry_count > 0:
                 print(f"\n🔄 RETRY ATTEMPT {retry_count}/{max_retries-1}")
                 print(f"   Waiting 100ms before retry...")
-                import time
                 time.sleep(0.1)  # Wait 100ms before retry
             
             # Use temporary graph if created, otherwise use instance graph
