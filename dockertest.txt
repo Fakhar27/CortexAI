@@ -1,0 +1,128 @@
+@csrf_exempt
+def manual_conversation_test(request):
+    """Manual conversation testing with selectable backend"""
+    if request.method == 'POST':
+        try:
+            # Parse request data
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST.dict()
+            
+            print("\n" + "="*80)
+            print("MANUAL CONVERSATION TEST")
+            print("="*80)
+            
+            # Extract parameters
+            backend = data.get('backend', 'pooler')
+            message = data.get('message', '')
+            model = data.get('model', 'gpt-4o-mini')
+            instructions = data.get('instructions', '')
+            previous_response_id = data.get('previous_response_id', None)
+            
+            print(f"[MANUAL TEST] Parameters:")
+            print(f"  - Backend: {backend}")
+            print(f"  - Model: {model}")
+            print(f"  - Message: {message[:100]}...")
+            print(f"  - Instructions: {'Yes' if instructions else 'No'}")
+            print(f"  - Previous Response ID: {previous_response_id}")
+            
+            # Initialize client based on backend
+            if backend == 'pooler':
+                # Supabase pooler connection
+                db_url = "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
+                print(f"[MANUAL TEST] Using Pooler: {db_url.split('@')[1]}")
+            elif backend == 'local':
+                # Local PostgreSQL
+                db_url = "postgresql://postgres:postgres@localhost:5432/cortex"
+                print(f"[MANUAL TEST] Using Local PostgreSQL")
+            else:  # sqlite
+                # SQLite (empty string or None)
+                db_url = ""
+                print(f"[MANUAL TEST] Using SQLite")
+            
+            client = Client(db_url=db_url)
+            
+            # Build request parameters
+            request_params = {
+                'model': model,
+                'input': message,
+                'store': True,
+                'temperature': 0.7
+            }
+            
+            if instructions:
+                request_params['instructions'] = instructions
+            
+            if previous_response_id:
+                request_params['previous_response_id'] = previous_response_id
+            
+            print(f"[MANUAL TEST] Request params:")
+            for key, value in request_params.items():
+                if key != 'input':
+                    print(f"  - {key}: {value}")
+            
+            # Make the API call
+            start_time = time.time()
+            response = client.create(**request_params)
+            execution_time = time.time() - start_time
+            
+            print(f"[MANUAL TEST] Response received in {execution_time:.2f}s")
+            print(f"  - Response ID: {response.get('id', 'No ID')}")
+            print(f"  - Thread ID: {response.get('thread_id', 'No Thread ID')}")
+            print(f"  - Provider: {response.get('provider', 'No provider')}")
+            
+            # Extract text
+            text = ''
+            if response.get('output'):
+                output = response['output'][0]
+                if output.get('content'):
+                    content = output['content'][0]
+                    text = content.get('text', '')
+            
+            # Prepare detailed response
+            detailed_response = {
+                'success': True,
+                'backend': backend,
+                'response_id': response.get('id'),
+                'thread_id': response.get('thread_id'),
+                'provider': response.get('provider'),
+                'model': model,
+                'text': text,
+                'execution_time': execution_time,
+                'request_details': {
+                    'message': message,
+                    'instructions': instructions,
+                    'previous_response_id': previous_response_id,
+                    'backend': backend,
+                    'db_url': db_url.split('@')[1] if '@' in db_url else 'SQLite'
+                },
+                'raw_response': {
+                    'id': response.get('id'),
+                    'thread_id': response.get('thread_id'),
+                    'status': response.get('status'),
+                    'provider': response.get('provider'),
+                    'model': response.get('model'),
+                    'has_output': bool(response.get('output'))
+                }
+            }
+            
+            print(f"[MANUAL TEST] Complete - Response ID: {response.get('id')}")
+            print("="*80 + "\n")
+            
+            return JsonResponse(detailed_response)
+            
+        except Exception as e:
+            print(f"[MANUAL TEST] ❌ ERROR: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            return JsonResponse({
+                'success': False,
+                'error': str(e),
+                'backend': data.get('backend', 'unknown'),
+                'traceback': traceback.format_exc()
+            })
+    
+    # GET request - render manual test page
+    return render(request, 'coaches/manual_test.html')

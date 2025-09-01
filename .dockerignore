@@ -40,10 +40,14 @@ conftest.py
 *.db
 *.sqlite
 *.log
-*.txt
 manual_*.py
 *_test.py
 *_debug.py
+# Exclude specific txt files but keep requirements
+lambda.txt
+dockertest.txt
+sssssss.txt
+*.log.txt
 
 # Documentation
 documentation*/
