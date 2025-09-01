@@ -479,6 +479,33 @@ class PostgresCheckpointerWrapper:
                 # Response must exist AND have been stored (store=True)
                 return result is not None and result[0] == True
     
+    def track_response(self, response_id: str, thread_id: str, was_stored: bool = False):
+        """
+        Pre-emptively track a response for continuity (Option C)
+        This ensures conversations can continue even if checkpoint save fails
+        
+        Args:
+            response_id: The response ID to track
+            thread_id: The thread ID this response belongs to  
+            was_stored: Whether the checkpoint was successfully stored
+        """
+        import psycopg
+        
+        try:
+            with psycopg.connect(self.connection_string, **self.connect_kwargs) as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO response_tracking (response_id, thread_id, was_stored) "
+                        "VALUES (%s, %s, %s) "
+                        "ON CONFLICT (response_id) DO UPDATE SET "
+                        "thread_id = EXCLUDED.thread_id, was_stored = EXCLUDED.was_stored",
+                        (response_id, thread_id, was_stored)
+                    )
+                conn.commit()
+        except Exception as e:
+            # Non-critical - log but don't fail
+            print(f"   ⚠️ Failed to pre-track response: {e}")
+    
     def get_thread_for_response(self, response_id: str) -> Optional[str]:
         """
         Get the thread_id that a response_id belongs to
