@@ -34,7 +34,7 @@ COPY --from=builder /var/task/packages ${LAMBDA_TASK_ROOT}
 
 # Copy your application code
 COPY cortex/ ${LAMBDA_TASK_ROOT}/cortex/
-COPY lambda_pooler_test.py ${LAMBDA_TASK_ROOT}/
+COPY lambda_handler.py ${LAMBDA_TASK_ROOT}/
 
 # Set the handler
-CMD ["lambda_pooler_test.lambda_handler"]
+CMD ["lambda_handler.lambda_handler"]

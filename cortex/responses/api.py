@@ -117,15 +117,16 @@ class ResponsesAPI:
             llm = get_llm(state["model"], temperature=temperature)
             
             # Build messages for the LLM
-            messages = []
+            # FIXED: Don't add system message here - it's already in state["messages"] from checkpoint
+            # The system message was added during initial state creation and persists through checkpoints
+            messages = list(state["messages"])  # Use messages directly from state (includes system message)
             
-            # Add system message if instructions provided
-            if state.get("instructions"):
-                messages.append(SystemMessage(content=state["instructions"]))
-                print(f"   Instructions: Yes")
-            
-            # Add conversation history (already has user's new message)
-            messages.extend(state["messages"])
+            # Check if we have instructions (for logging only)
+            has_system_msg = any(isinstance(msg, SystemMessage) for msg in messages)
+            if has_system_msg:
+                print(f"   Instructions: Yes (from checkpoint)")
+            elif state.get("instructions"):
+                print(f"   Instructions: Yes (but not in messages - this is a bug!)")
             print(f"   Total messages to LLM: {len(messages)}")
             
             # Show conversation preview

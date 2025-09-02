@@ -11,7 +11,7 @@ try:
 except ImportError as e:
     print(f"Warning: Cohere not available: {e}")
     COHERE_AVAILABLE = False
-    from .mock_llm import MockChatModel as ChatCohere
+    ChatCohere = None
 
 # OpenAI provider
 try:
@@ -20,7 +20,7 @@ try:
 except ImportError as e:
     print(f"Warning: OpenAI not available: {e}")
     OPENAI_AVAILABLE = False
-    from .mock_llm import MockChatModel as ChatOpenAI
+    ChatOpenAI = None
 
 # Google provider
 try:
@@ -29,7 +29,7 @@ try:
 except ImportError as e:
     print(f"Warning: Google Gemini not available: {e}")
     GOOGLE_AVAILABLE = False
-    from .mock_llm import MockChatModel as ChatGoogleGenerativeAI
+    ChatGoogleGenerativeAI = None
 
 from cortex.models.registry import get_model_config
 
@@ -147,9 +147,7 @@ def get_llm(model_str: str, temperature: float = None):
     match config["provider"]:
         case "openai":
             if not OPENAI_AVAILABLE:
-                print("Warning: OpenAI not available, using mock LLM")
-                print("Install with: pip install langchain-openai")
-                return ChatOpenAI(**config)
+                raise ValueError(f"OpenAI provider not available for model '{model_str}'. Install with: pip install langchain-openai")
             
             return ChatOpenAI(
                 model=config["model_name"],
@@ -160,9 +158,7 @@ def get_llm(model_str: str, temperature: float = None):
             
         case "google":
             if not GOOGLE_AVAILABLE:
-                print("Warning: Google Gemini not available, using mock LLM")
-                print("Install with: pip install langchain-google-genai")
-                return ChatGoogleGenerativeAI(**config)
+                raise ValueError(f"Google provider not available for model '{model_str}'. Install with: pip install langchain-google-genai")
             
             return ChatGoogleGenerativeAI(
                 model=config["model_name"],
@@ -173,9 +169,7 @@ def get_llm(model_str: str, temperature: float = None):
             
         case "cohere":
             if not COHERE_AVAILABLE:
-                print("Warning: Cohere not available, using mock LLM")
-                print("Install with: pip install langchain-cohere")
-                return ChatCohere(**config)
+                raise ValueError(f"Cohere provider not available for model '{model_str}'. Install with: pip install langchain-cohere")
             
             return ChatCohere(
                 model=config["model_name"],
