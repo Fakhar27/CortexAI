@@ -283,8 +283,16 @@ def create_response(
     
     # Step 3: State Preparation
     # Create initial state matching ResponsesState structure
+    # CRITICAL FIX: Add system message to messages array for NEW conversations
+    messages = []
+    if instructions and not previous_response_id:
+        # Only add system message for NEW conversations (not continuing ones)
+        from langchain_core.messages import SystemMessage
+        messages.append(SystemMessage(content=instructions))
+    messages.append(HumanMessage(content=input))
+    
     initial_state = {
-        "messages": [HumanMessage(content=input)],  # Convert user input to message
+        "messages": messages,  # Messages array includes system message for persistence
         "response_id": response_id,
         "previous_response_id": previous_response_id,
         "input": input,
