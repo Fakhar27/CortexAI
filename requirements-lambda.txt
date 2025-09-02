@@ -13,6 +13,7 @@ langchain-anthropic==0.3.18
 
 # Database
 psycopg-binary==3.2.9
+cohere==5.11.0
 
 SQLAlchemy==2.0.42
 numpy==1.26.4

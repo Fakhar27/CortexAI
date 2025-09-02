@@ -10,9 +10,9 @@ def lambda_handler(event, context):
     
     Required parameters:
     - input: User message 
-    - db_url: Database connection string
     
     Optional parameters:
+    - db_url: Database connection string (falls back to MemorySaver if empty/missing)
     - model: LLM model (default: "gpt-4o-mini")
     - previous_response_id: Continue conversation
     - instructions: System prompt
@@ -34,7 +34,7 @@ def lambda_handler(event, context):
         
         # Required parameters
         user_input = body.get("input")
-        db_url = body.get("db_url")
+        db_url = body.get("db_url")  # Can be empty string or None - persistence.py handles fallback
         
         if not user_input:
             return {
@@ -42,19 +42,8 @@ def lambda_handler(event, context):
                 "headers": {"Content-Type": "application/json"},
                 "body": json.dumps({
                     "error": "Missing required parameter: 'input'",
-                    "required_fields": ["input", "db_url"],
-                    "optional_fields": ["model", "previous_response_id", "instructions", "store", "temperature"]
-                })
-            }
-        
-        if not db_url:
-            return {
-                "statusCode": 400,
-                "headers": {"Content-Type": "application/json"},
-                "body": json.dumps({
-                    "error": "Missing required parameter: 'db_url'",
-                    "required_fields": ["input", "db_url"],
-                    "optional_fields": ["model", "previous_response_id", "instructions", "store", "temperature"]
+                    "required_fields": ["input"],
+                    "optional_fields": ["db_url", "model", "previous_response_id", "instructions", "store", "temperature"]
                 })
             }
         
@@ -96,7 +85,7 @@ def lambda_handler(event, context):
             "request_id": context.aws_request_id if context else None
         }
         response["request_metadata"] = {
-            "db_url_host": db_url.split("@")[1].split("/")[0] if "@" in db_url else "local",
+            "db_url_host": db_url.split("@")[1].split("/")[0] if db_url and "@" in db_url else ("local" if db_url else "memory"),
             "model_requested": model,
             "store_enabled": store,
             "has_previous_context": bool(previous_response_id),

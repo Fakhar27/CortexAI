@@ -1,0 +1,124 @@
+(env) fakhar@DESKTOP-9H42JH4:/mnt/e/cortexAI/cortex$ python test_all_models.py 
+🧪 COMPREHENSIVE MODEL TESTING SCRIPT
+Testing all providers and models to identify issues
+
+============================================================
+INSTALLED PACKAGE VERSIONS
+============================================================
+  langchain-cohere          0.4.2
+  langchain-openai          0.3.28
+  langchain-google-genai    2.1.9
+  langchain-anthropic       0.3.18
+  cohere                    5.13.11
+  openai                    1.98.0
+  google-generativeai       NOT INSTALLED
+  anthropic                 0.60.0
+  langgraph                 0.6.2
+  langchain-core            0.3.72
+============================================================
+PROVIDER IMPORT TESTING
+============================================================
+
+1. COHERE PROVIDER:
+--------------------
+✅ langchain_cohere.ChatCohere imported successfully
+✅ cohere.types.ChatResponse imported successfully
+📦 cohere package version: 5.13.11
+📋 Available in cohere.types: ['ApiMeta', 'ApiMetaApiVersion', 'ApiMetaBilledUnits', 'ApiMetaTokens', 'AssistantChatMessageV2', 'AssistantMessage', 'AssistantMessageContent', 'AssistantMessageContentItem', 'AssistantMessageResponse', 'AssistantMessageResponseContentItem', 'AuthTokenType', 'ChatCitation', 'ChatCitationGenerationEvent', 'ChatCitationType', 'ChatConnector', 'ChatContentDeltaEvent', 'ChatContentDeltaEventDelta', 'ChatContentDeltaEventDeltaMessage', 'ChatContentDeltaEventDeltaMessageContent', 'ChatContentEndEvent', 'ChatContentStartEvent', 'ChatContentStartEventDelta', 'ChatContentStartEventDeltaMessage', 'ChatContentStartEventDeltaMessageContent', 'ChatDataMetrics', 'ChatDebugEvent', 'ChatDocument', 'ChatFinishReason', 'ChatMessage', 'ChatMessageEndEvent', 'ChatMessageEndEventDelta', 'ChatMessageStartEvent', 'ChatMessageStartEventDelta', 'ChatMessageStartEventDeltaMessage', 'ChatMessageV2', 'ChatMessages', 'ChatRequestCitationQuality', 'ChatRequestConnectorsSearchOptions', 'ChatRequestPromptTruncation', 'ChatRequestSafetyMode', 'ChatResponse', 'ChatSearchQueriesGenerationEvent', 'ChatSearchQuery', 'ChatSearchResult', 'ChatSearchResultConnector', 'ChatSearchResultsEvent', 'ChatStreamEndEvent', 'ChatStreamEndEventFinishReason', 'ChatStreamEvent', 'ChatStreamEventType', 'ChatStreamRequestCitationQuality', 'ChatStreamRequestConnectorsSearchOptions', 'ChatStreamRequestPromptTruncation', 'ChatStreamRequestSafetyMode', 'ChatStreamStartEvent', 'ChatTextGenerationEvent', 'ChatToolCallDeltaEvent', 'ChatToolCallDeltaEventDelta', 'ChatToolCallDeltaEventDeltaMessage', 'ChatToolCallDeltaEventDeltaMessageToolCalls', 'ChatToolCallDeltaEventDeltaMessageToolCallsFunction', 'ChatToolCallEndEvent', 'ChatToolCallStartEvent', 'ChatToolCallStartEventDelta', 'ChatToolCallStartEventDeltaMessage', 'ChatToolCallsChunkEvent', 'ChatToolCallsGenerationEvent', 'ChatToolPlanDeltaEvent', 'ChatToolPlanDeltaEventDelta', 'ChatToolPlanDeltaEventDeltaMessage', 'ChatbotMessage', 'CheckApiKeyResponse', 'Citation', 'CitationEndEvent', 'CitationEndStreamedChatResponseV2', 'CitationGenerationStreamedChatResponse', 'CitationOptions', 'CitationOptionsMode', 'CitationStartEvent', 'CitationStartEventDelta', 'CitationStartEventDeltaMessage', 'CitationStartStreamedChatResponseV2', 'CitationType', 'ClassifyDataMetrics', 'ClassifyExample', 'ClassifyRequestTruncate', 'ClassifyResponse', 'ClassifyResponseClassificationsItem', 'ClassifyResponseClassificationsItemClassificationType', 'ClassifyResponseClassificationsItemLabelsValue', 'CompatibleEndpoint', 'Connector', 'ConnectorAuthStatus', 'ConnectorOAuth', 'Content', 'ContentDeltaStreamedChatResponseV2', 'ContentEndStreamedChatResponseV2', 'ContentStartStreamedChatResponseV2', 'CreateConnectorOAuth', 'CreateConnectorResponse', 'CreateConnectorServiceAuth', 'CreateEmbedJobResponse', 'Dataset', 'DatasetPart', 'DatasetType', 'DatasetValidationStatus', 'DebugStreamedChatResponse', 'DebugStreamedChatResponseV2', 'DeleteConnectorResponse', 'DetokenizeResponse', 'Document', 'DocumentContent', 'DocumentSource', 'DocumentToolContent', 'EmbedByTypeResponse', 'EmbedByTypeResponseEmbeddings', 'EmbedFloatsResponse', 'EmbedInputType', 'EmbedJob', 'EmbedJobStatus', 'EmbedJobTruncate', 'EmbedRequestTruncate', 'EmbedResponse', 'EmbeddingType', 'EmbeddingsByTypeEmbedResponse', 'EmbeddingsFloatsEmbedResponse', 'FinetuneDatasetMetrics', 'FinishReason', 'GenerateRequestReturnLikelihoods', 'GenerateRequestTruncate', 'GenerateStreamEnd', 'GenerateStreamEndResponse', 'GenerateStreamError', 'GenerateStreamEvent', 'GenerateStreamRequestReturnLikelihoods', 'GenerateStreamRequestTruncate', 'GenerateStreamText', 'GenerateStreamedResponse', 'Generation', 'GetConnectorResponse', 'GetModelResponse', 'Image', 'JsonObjectResponseFormat', 'JsonObjectResponseFormatV2', 'JsonResponseFormat', 'JsonResponseFormatV2', 'LabelMetric', 'ListConnectorsResponse', 'ListEmbedJobResponse', 'ListModelsResponse', 'LogprobItem', 'Message', 'MessageEndStreamedChatResponseV2', 'MessageStartStreamedChatResponseV2', 'Metrics', 'MetricsEmbedData', 'MetricsEmbedDataFieldsItem', 'NonStreamedChatResponse', 'OAuthAuthorizeResponse', 'ParseInfo', 'RerankDocument', 'RerankRequestDocumentsItem', 'RerankResponse', 'RerankResponseResultsItem', 'RerankResponseResultsItemDocument', 'RerankerDataMetrics', 'ResponseFormat', 'ResponseFormatV2', 'SearchQueriesGenerationStreamedChatResponse', 'SearchResultsStreamedChatResponse', 'SingleGeneration', 'SingleGenerationInStream', 'SingleGenerationTokenLikelihoodsItem', 'Source', 'StreamEndGenerateStreamedResponse', 'StreamEndStreamedChatResponse', 'StreamErrorGenerateStreamedResponse', 'StreamStartStreamedChatResponse', 'StreamedChatResponse', 'StreamedChatResponseV2', 'SummarizeRequestExtractiveness', 'SummarizeRequestFormat', 'SummarizeRequestLength', 'SummarizeResponse', 'SystemChatMessageV2', 'SystemMessage', 'SystemMessageContent', 'SystemMessageContentItem', 'TextAssistantMessageContentItem', 'TextAssistantMessageResponseContentItem', 'TextContent', 'TextGenerationGenerateStreamedResponse', 'TextGenerationStreamedChatResponse', 'TextResponseFormat', 'TextResponseFormatV2', 'TextSystemMessageContentItem', 'TextToolContent', 'TokenizeResponse', 'Tool', 'ToolCall', 'ToolCallDelta', 'ToolCallDeltaStreamedChatResponseV2', 'ToolCallEndStreamedChatResponseV2', 'ToolCallStartStreamedChatResponseV2', 'ToolCallV2', 'ToolCallV2Function', 'ToolCallsChunkStreamedChatResponse', 'ToolCallsGenerationStreamedChatResponse', 'ToolChatMessageV2', 'ToolContent', 'ToolMessage', 'ToolMessageV2', 'ToolMessageV2Content', 'ToolParameterDefinitionsValue', 'ToolPlanDeltaStreamedChatResponseV2', 'ToolResult', 'ToolSource', 'ToolV2', 'ToolV2Function', 'UpdateConnectorResponse', 'Usage', 'UsageBilledUnits', 'UsageTokens', 'UserChatMessageV2', 'UserMessage', 'UserMessageContent', 'api_meta', 'api_meta_api_version', 'api_meta_billed_units', 'api_meta_tokens', 'assistant_message', 'assistant_message_content', 
+'assistant_message_content_item', 'assistant_message_response', 'assistant_message_response_content_item', 'auth_token_type', 'chat_citation', 'chat_citation_generation_event', 'chat_citation_type', 'chat_connector', 'chat_content_delta_event', 'chat_content_delta_event_delta', 'chat_content_delta_event_delta_message', 'chat_content_delta_event_delta_message_content', 'chat_content_end_event', 'chat_content_start_event', 'chat_content_start_event_delta', 'chat_content_start_event_delta_message', 'chat_content_start_event_delta_message_content', 'chat_data_metrics', 'chat_debug_event', 'chat_document', 'chat_finish_reason', 'chat_message', 'chat_message_end_event', 'chat_message_end_event_delta', 'chat_message_start_event', 'chat_message_start_event_delta', 'chat_message_start_event_delta_message', 'chat_message_v2', 'chat_messages', 'chat_request_citation_quality', 'chat_request_connectors_search_options', 'chat_request_prompt_truncation', 'chat_request_safety_mode', 'chat_response', 'chat_search_queries_generation_event', 'chat_search_query', 'chat_search_result', 'chat_search_result_connector', 'chat_search_results_event', 'chat_stream_end_event', 'chat_stream_end_event_finish_reason', 'chat_stream_event', 'chat_stream_event_type', 'chat_stream_request_citation_quality', 'chat_stream_request_connectors_search_options', 'chat_stream_request_prompt_truncation', 'chat_stream_request_safety_mode', 'chat_stream_start_event', 'chat_text_generation_event', 'chat_tool_call_delta_event', 'chat_tool_call_delta_event_delta', 'chat_tool_call_delta_event_delta_message', 'chat_tool_call_delta_event_delta_message_tool_calls', 'chat_tool_call_delta_event_delta_message_tool_calls_function', 'chat_tool_call_end_event', 'chat_tool_call_start_event', 'chat_tool_call_start_event_delta', 'chat_tool_call_start_event_delta_message', 'chat_tool_calls_chunk_event', 'chat_tool_calls_generation_event', 'chat_tool_plan_delta_event', 'chat_tool_plan_delta_event_delta', 'chat_tool_plan_delta_event_delta_message', 'check_api_key_response', 'citation', 'citation_end_event', 'citation_options', 'citation_options_mode', 'citation_start_event', 'citation_start_event_delta', 'citation_start_event_delta_message', 'citation_type', 'classify_data_metrics', 'classify_example', 'classify_request_truncate', 'classify_response', 'classify_response_classifications_item', 'classify_response_classifications_item_classification_type', 'classify_response_classifications_item_labels_value', 'compatible_endpoint', 'connector', 'connector_auth_status', 'connector_o_auth', 'content', 'create_connector_o_auth', 'create_connector_response', 'create_connector_service_auth', 'create_embed_job_response', 'dataset', 'dataset_part', 'dataset_type', 'dataset_validation_status', 'delete_connector_response', 'detokenize_response', 'document', 'document_content', 'embed_by_type_response', 'embed_by_type_response_embeddings', 'embed_floats_response', 'embed_input_type', 'embed_job', 'embed_job_status', 'embed_job_truncate', 'embed_request_truncate', 'embed_response', 'embedding_type', 'finetune_dataset_metrics', 'finish_reason', 'generate_request_return_likelihoods', 'generate_request_truncate', 'generate_stream_end', 'generate_stream_end_response', 'generate_stream_error', 'generate_stream_event', 'generate_stream_request_return_likelihoods', 'generate_stream_request_truncate', 'generate_stream_text', 'generate_streamed_response', 'generation', 'get_connector_response', 'get_model_response', 'image', 'json_response_format', 'json_response_format_v2', 'label_metric', 'list_connectors_response', 'list_embed_job_response', 'list_models_response', 'logprob_item', 'message', 'metrics', 'metrics_embed_data', 'metrics_embed_data_fields_item', 'non_streamed_chat_response', 'o_auth_authorize_response', 'parse_info', 'rerank_document', 'rerank_request_documents_item', 'rerank_response', 'rerank_response_results_item', 'rerank_response_results_item_document', 'reranker_data_metrics', 'response_format', 'response_format_v2', 'single_generation', 'single_generation_in_stream', 'single_generation_token_likelihoods_item', 'source', 'streamed_chat_response', 'streamed_chat_response_v2', 'summarize_request_extractiveness', 'summarize_request_format', 'summarize_request_length', 'summarize_response', 'system_message_content', 'system_message_content_item', 'tokenize_response', 'tool', 'tool_call', 'tool_call_delta', 'tool_call_v2', 'tool_call_v2function', 'tool_content', 'tool_message_v2', 'tool_message_v2content', 'tool_parameter_definitions_value', 'tool_result', 'tool_v2', 'tool_v2function', 'update_connector_response', 'usage', 'usage_billed_units', 'usage_tokens', 'user_message_content']
+
+2. OPENAI PROVIDER:
+--------------------
+✅ langchain_openai.ChatOpenAI imported successfully
+
+3. GOOGLE PROVIDER:
+--------------------
+✅ langchain_google_genai.ChatGoogleGenerativeAI imported successfully
+
+4. ANTHROPIC PROVIDER:
+--------------------
+✅ langchain_anthropic.ChatAnthropic imported successfully
+
+============================================================
+CORTEX MODEL REGISTRY TESTING
+============================================================
+
+📋 Total models in registry: 11
+  openai: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo']
+  google: ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-1.0-pro']
+  cohere: ['command-r', 'command-r-plus', 'command', 'cohere']
+
+🧪 Testing model initialization:
+----------------------------------------
+
+Testing gpt-4o...
+  ✅ gpt-4o initialized successfully
+     Type: ChatOpenAI
+
+Testing gpt-4o-mini...
+  ✅ gpt-4o-mini initialized successfully
+     Type: ChatOpenAI
+
+Testing gpt-4-turbo...
+  ✅ gpt-4-turbo initialized successfully
+     Type: ChatOpenAI
+
+Testing gpt-3.5-turbo...
+  ✅ gpt-3.5-turbo initialized successfully
+     Type: ChatOpenAI
+
+Testing gemini-1.5-flash...
+  ✅ gemini-1.5-flash initialized successfully
+     Type: ChatGoogleGenerativeAI
+
+Testing gemini-1.5-pro...
+  ✅ gemini-1.5-pro initialized successfully
+     Type: ChatGoogleGenerativeAI
+
+Testing gemini-1.0-pro...
+  ✅ gemini-1.0-pro initialized successfully
+     Type: ChatGoogleGenerativeAI
+
+Testing command-r...
+  ✅ command-r initialized successfully
+     Type: ChatCohere
+
+Testing command-r-plus...
+  ✅ command-r-plus initialized successfully
+     Type: ChatCohere
+
+Testing command...
+  ✅ command initialized successfully
+     Type: ChatCohere
+
+Testing cohere...
+  ✅ cohere initialized successfully
+     Type: ChatCohere
+
+============================================================
+API KEY CHECK
+============================================================
+  OPENAI_API_KEY       ✅ Present (sk-proj-MR...)
+  GOOGLE_API_KEY       ✅ Present (AIzaSyBhga...)
+  CO_API_KEY           ✅ Present (Xv4zT3ps1Z...)
+  ANTHROPIC_API_KEY    ❌ Missing
+
+============================================================
+ACTUAL LLM CALL TESTING
+============================================================
+
+🧪 Testing gpt-4o-mini:
+   API Key Env: OPENAI_API_KEY
+   ✅ Response: Hi from ChatGPT!...
+
+🧪 Testing command-r:
+   API Key Env: CO_API_KEY
+   ✅ Response: Hi from Coral!...
+
+🧪 Testing gemini-1.5-flash:
+   API Key Env: GOOGLE_API_KEY
+   ✅ Response: Hi from Bard...
+
+============================================================
+TESTING COMPLETE
+========================================

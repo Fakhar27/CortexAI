@@ -1,0 +1,568 @@
+{
+  "input": "Hello, my name is John and i like black color",
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  "model": "gpt-4o-mini",
+  "instructions": "You are helpful",
+  "store": true
+}
+
+START RequestId: dcb5e7de-3f8b-4e43-94d3-ff93b60aecdb Version: $LATEST
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+📝 PRE-EMPTIVE RESPONSE TRACKING
+Response ID: resp_7f711c06a76f
+Thread ID: resp_7f711c06a76f
+✅ Response pre-registered for continuity
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_7f711c06a76f
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+🧠 LLM GENERATION NODE
+Model: gpt-4o-mini
+Temperature: 0.7
+Messages in state: 1
+Instructions: Yes
+Total messages to LLM: 2
+📜 Conversation history:
+[System]: You are helpful...
+[Human]: Hello, my name is John and i like black color...
+🚀 Invoking gpt-4o-mini LLM...
+✅ PostgresSaver.put() returned successfully
+✅ LLM responded: Hello, John! It's nice to meet you. Black is a classic and versatile color. Do you have a favorite w...
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_7f711c06a76f
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_7f711c06a76f
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+END RequestId: dcb5e7de-3f8b-4e43-94d3-ff93b60aecdb
+REPORT RequestId: dcb5e7de-3f8b-4e43-94d3-ff93b60aecdb	Duration: 14866.35 ms	Billed Duration: 14867 ms	Memory Size: 400 MB	Max Memory Used: 164 MB	
+
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": \"resp_7f711c06a76f\", \"object\": \"response\", \"created_at\": 1756752092, \"status\": \"completed\", \"error\": null, \"incomplete_details\": null, \"instructions\": \"You are helpful\", \"max_output_tokens\": null, \"model\": \"gpt-4o-mini\", \"output\": [{\"type\": \"message\", \"id\": \"msg_3349eb1d025c465c86da7c4d\", \"status\": \"completed\", \"role\": \"assistant\", \"content\": [{\"type\": \"output_text\", \"text\": \"Hello, John! It's nice to meet you. Black is a classic and versatile color. Do you have a favorite way to incorporate black into your life, like in fashion, home decor, or art?\", \"annotations\": []}]}], \"parallel_tool_calls\": true, \"previous_response_id\": null, \"reasoning\": {\"effort\": null, \"summary\": null}, \"store\": true, \"temperature\": 0.7, \"text\": {\"format\": {\"type\": \"text\"}}, \"tool_choice\": \"auto\", \"tools\": [], \"top_p\": 1.0, \"truncation\": \"disabled\", \"usage\": {\"input_tokens\": 13, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 42, \"output_tokens_details\": {\"reasoning_tokens\": 0}, \"total_tokens\": 55}, \"user\": null, \"metadata\": {}, \"execution_time\": 14.865, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"dcb5e7de-3f8b-4e43-94d3-ff93b60aecdb\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"gpt-4o-mini\", \"store_enabled\": true, \"has_previous_context\": false, \"has_instructions\": true}}"
+}
+
+
+
+{
+  "input": "What is my name and favourite color?",
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  "model": "gpt-4o-mini",
+  "instructions": "You are helpful",
+  "previous_response_id": "resp_7f711c06a76f",
+  "store": true
+}
+
+START RequestId: ac790c41-46c3-4ec4-b30a-ff3749f088b2 Version: $LATEST
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+📝 PRE-EMPTIVE RESPONSE TRACKING
+Response ID: resp_a4adf8c80103
+Thread ID: resp_7f711c06a76f
+✅ Response pre-registered for continuity
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_a4adf8c80103
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+🧠 LLM GENERATION NODE
+Model: gpt-4o-mini
+Temperature: 0.7
+Messages in state: 3
+Total messages to LLM: 3
+📜 Conversation history:
+[Human]: Hello, my name is John and i like black color...
+[AI]: Hello, John! It's nice to meet you. Black is a classic and versatile color. Do y...
+[Human]: What is my name and favourite color?...
+🚀 Invoking gpt-4o-mini LLM...
+✅ LLM responded: Your name is John, and your favorite color is black....
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_a4adf8c80103
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_a4adf8c80103
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+END RequestId: ac790c41-46c3-4ec4-b30a-ff3749f088b2
+REPORT RequestId: ac790c41-46c3-4ec4-b30a-ff3749f088b2	Duration: 18999.75 ms	Billed Duration: 19000 ms	Memory Size: 400 MB	Max Memory Used: 165 MB	
+
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": \"resp_a4adf8c80103\", \"object\": \"response\", \"created_at\": 1756752295, \"status\": \"completed\", \"error\": null, \"incomplete_details\": null, \"instructions\": null, \"max_output_tokens\": null, \"model\": \"gpt-4o-mini\", \"output\": [{\"type\": \"message\", \"id\": \"msg_c373be543e5b4ec4b7838db3\", \"status\": \"completed\", \"role\": \"assistant\", \"content\": [{\"type\": \"output_text\", \"text\": \"Your name is John, and your favorite color is black.\", \"annotations\": []}]}], \"parallel_tool_calls\": true, \"previous_response_id\": \"resp_7f711c06a76f\", \"reasoning\": {\"effort\": null, \"summary\": null}, \"store\": true, \"temperature\": 0.7, \"text\": {\"format\": {\"type\": \"text\"}}, \"tool_choice\": \"auto\", \"tools\": [], \"top_p\": 1.0, \"truncation\": \"disabled\", \"usage\": {\"input_tokens\": 9, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 13, \"output_tokens_details\": {\"reasoning_tokens\": 0}, \"total_tokens\": 22}, \"user\": null, \"metadata\": {}, \"execution_time\": 18.998, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"ac790c41-46c3-4ec4-b30a-ff3749f088b2\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"gpt-4o-mini\", \"store_enabled\": true, \"has_previous_context\": true, \"has_instructions\": true}}"
+}
+
+
+{
+  "input": "What is my name and also remember that my parrot name is amu and its color is pink",
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  "model": "command-r",
+  "instructions": "You are helpful",
+  "previous_response_id": "resp_a4adf8c80103",
+  "store": true
+}
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": \"resp_03f26ff56dbe\", \"object\": \"response\", \"created_at\": 1756752620, \"status\": \"completed\", \"error\": null, \"incomplete_details\": null, \"instructions\": null, \"max_output_tokens\": null, \"model\": \"command-r\", \"output\": [{\"type\": \"message\", \"id\": \"msg_9827e2cf1eaf423099d2241a\", \"status\": \"completed\", \"role\": \"assistant\", \"content\": [{\"type\": \"output_text\", \"text\": \"System error: Cohere provider not available for model 'command-r'. Install with: pip install langchain-cohere\", \"annotations\": []}]}], \"parallel_tool_calls\": true, \"previous_response_id\": \"resp_a4adf8c80103\", \"reasoning\": {\"effort\": null, \"summary\": null}, \"store\": true, \"temperature\": 0.7, \"text\": {\"format\": {\"type\": \"text\"}}, \"tool_choice\": \"auto\", \"tools\": [], \"top_p\": 1.0, \"truncation\": \"disabled\", \"usage\": {\"input_tokens\": 23, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 18, \"output_tokens_details\": {\"reasoning_tokens\": 0}, \"total_tokens\": 41}, \"user\": null, \"metadata\": {}, \"execution_time\": 19.043, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"97362eec-e394-4bf7-a543-d64a740f83bf\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"command-r\", \"store_enabled\": true, \"has_previous_context\": true, \"has_instructions\": true}}"
+}
+
+
+START RequestId: 97362eec-e394-4bf7-a543-d64a740f83bf Version: $LATEST
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+📝 PRE-EMPTIVE RESPONSE TRACKING
+Response ID: resp_03f26ff56dbe
+Thread ID: resp_7f711c06a76f
+✅ Response pre-registered for continuity
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_03f26ff56dbe
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+🧠 LLM GENERATION NODE
+Model: command-r
+Temperature: 0.7
+Messages in state: 7
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_03f26ff56dbe
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_03f26ff56dbe
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+END RequestId: 97362eec-e394-4bf7-a543-d64a740f83bf
+REPORT RequestId: 97362eec-e394-4bf7-a543-d64a740f83bf	Duration: 19044.55 ms	Billed Duration: 19045 ms	Memory Size: 400 MB	Max Memory Used: 165 MB	
+
+
+{
+  "input": "What is my name and also remember that my parrot name is amu and its color is pink",
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  "model": "gemini-1.5-flash",
+  "instructions": "You are helpful",
+  "previous_response_id": "resp_a4adf8c80103",
+  "store": true
+}
+
+
+START RequestId: 595a0453-ccd8-4a6d-b260-85ce515efd87 Version: $LATEST
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+📝 PRE-EMPTIVE RESPONSE TRACKING
+Response ID: resp_003b6e6b39c8
+Thread ID: resp_7f711c06a76f
+✅ Response pre-registered for continuity
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_003b6e6b39c8
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+🧠 LLM GENERATION NODE
+Model: gemini-1.5-flash
+Temperature: 0.7
+Messages in state: 9
+Total messages to LLM: 9
+📜 Conversation history:
+[Human]: What is my name and also remember that my parrot name is amu and its color is pi...
+[AI]: System error: Cohere provider not available for model 'command-r'. Install with:...
+[Human]: What is my name and also remember that my parrot name is amu and its color is pi...
+🚀 Invoking gemini-1.5-flash LLM...
+✅ LLM responded: Your name is John.  You also have a parrot named Amu, who is pink....
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_003b6e6b39c8
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_003b6e6b39c8
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+END RequestId: 595a0453-ccd8-4a6d-b260-85ce515efd87
+REPORT RequestId: 595a0453-ccd8-4a6d-b260-85ce515efd87	Duration: 19401.17 ms	Billed Duration: 19402 ms	Memory Size: 400 MB	Max Memory Used: 174 MB	
+
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": \"resp_003b6e6b39c8\", \"object\": \"response\", \"created_at\": 1756752693, \"status\": \"completed\", \"error\": null, \"incomplete_details\": null, \"instructions\": null, \"max_output_tokens\": null, \"model\": \"gemini-1.5-flash\", \"output\": [{\"type\": \"message\", \"id\": \"msg_9544ed9a9a334b7ca76cba9a\", \"status\": \"completed\", \"role\": \"assistant\", \"content\": [{\"type\": \"output_text\", \"text\": \"Your name is John.  You also have a parrot named Amu, who is pink.\", \"annotations\": []}]}], \"parallel_tool_calls\": true, \"previous_response_id\": \"resp_a4adf8c80103\", \"reasoning\": {\"effort\": null, \"summary\": null}, \"store\": true, \"temperature\": 0.7, \"text\": {\"format\": {\"type\": \"text\"}}, \"tool_choice\": \"auto\", \"tools\": [], \"top_p\": 1.0, \"truncation\": \"disabled\", \"usage\": {\"input_tokens\": 23, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 18, \"output_tokens_details\": {\"reasoning_tokens\": 0}, \"total_tokens\": 41}, \"user\": null, \"metadata\": {}, \"execution_time\": 19.399, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"595a0453-ccd8-4a6d-b260-85ce515efd87\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"gemini-1.5-flash\", \"store_enabled\": true, \"has_previous_context\": true, \"has_instructions\": true}}"
+}
+
+
+{
+  "input": "What is my favourite show and my name?",
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  "model": "gemini-1.5-flash",
+  "instructions": "You are helpful",
+  "previous_response_id": "resp_003b6e6b39c8",
+  "store": true
+}
+
+START RequestId: b13d25c2-2475-4ba8-a15a-a78e979bd95e Version: $LATEST
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+📝 PRE-EMPTIVE RESPONSE TRACKING
+Response ID: resp_3c26cf43960c
+Thread ID: resp_7f711c06a76f
+✅ Response pre-registered for continuity
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_3c26cf43960c
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+🧠 LLM GENERATION NODE
+Model: gemini-1.5-flash
+Temperature: 0.7
+Messages in state: 13
+Total messages to LLM: 13
+📜 Conversation history:
+[Human]: What is my favourite color and what is my parrots color? also remember that my f...
+[AI]: Your favorite color is black, and your parrot Amu's color is pink. You also ment...
+[Human]: What is my favourite show and my name?...
+🚀 Invoking gemini-1.5-flash LLM...
+✅ LLM responded: Your favorite show is One Piece, and your name is John....
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_3c26cf43960c
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_3c26cf43960c
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+END RequestId: b13d25c2-2475-4ba8-a15a-a78e979bd95e
+REPORT RequestId: b13d25c2-2475-4ba8-a15a-a78e979bd95e	Duration: 19210.64 ms	Billed Duration: 19211 ms	Memory Size: 400 MB	Max Memory Used: 175 MB	
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": \"resp_3c26cf43960c\", \"object\": \"response\", \"created_at\": 1756752924, \"status\": \"completed\", \"error\": null, \"incomplete_details\": null, \"instructions\": null, \"max_output_tokens\": null, \"model\": \"gemini-1.5-flash\", \"output\": [{\"type\": \"message\", \"id\": \"msg_8455fdf3ec8644468cce7718\", \"status\": \"completed\", \"role\": \"assistant\", \"content\": [{\"type\": \"output_text\", \"text\": \"Your favorite show is One Piece, and your name is John.\", \"annotations\": []}]}], \"parallel_tool_calls\": true, \"previous_response_id\": \"resp_003b6e6b39c8\", \"reasoning\": {\"effort\": null, \"summary\": null}, \"store\": true, \"temperature\": 0.7, \"text\": {\"format\": {\"type\": \"text\"}}, \"tool_choice\": \"auto\", \"tools\": [], \"top_p\": 1.0, \"truncation\": \"disabled\", \"usage\": {\"input_tokens\": 10, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 14, \"output_tokens_details\": {\"reasoning_tokens\": 0}, \"total_tokens\": 24}, \"user\": null, \"metadata\": {}, \"execution_time\": 19.209, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"b13d25c2-2475-4ba8-a15a-a78e979bd95e\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"gemini-1.5-flash\", \"store_enabled\": true, \"has_previous_context\": true, \"has_instructions\": true}}"
+}
+
+{
+  "input": "What is my favourite color and my parrots name?",
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  "model": "command",
+  "instructions": "You are helpful",
+  "previous_response_id": "resp_3c26cf43960c",
+  "store": true
+}
+
+START RequestId: 43daab6c-d9d6-4f9f-aff0-521a55802830 Version: $LATEST
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+📝 PRE-EMPTIVE RESPONSE TRACKING
+Response ID: resp_5499fb42e933
+Thread ID: resp_7f711c06a76f
+✅ Response pre-registered for continuity
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_5499fb42e933
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+🧠 LLM GENERATION NODE
+Model: command
+Temperature: 0.7
+Messages in state: 15
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_5499fb42e933
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_7f711c06a76f
+Response ID: resp_5499fb42e933
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+END RequestId: 43daab6c-d9d6-4f9f-aff0-521a55802830
+REPORT RequestId: 43daab6c-d9d6-4f9f-aff0-521a55802830	Duration: 19600.40 ms	Billed Duration: 19601 ms	Memory Size: 400 MB	Max Memory Used: 175 MB	
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": \"resp_5499fb42e933\", \"object\": \"response\", \"created_at\": 1756753037, \"status\": \"completed\", \"error\": null, \"incomplete_details\": null, \"instructions\": null, \"max_output_tokens\": null, \"model\": \"command\", \"output\": [{\"type\": \"message\", \"id\": \"msg_b6cc024bfb1b4b19845059f1\", \"status\": \"completed\", \"role\": \"assistant\", \"content\": [{\"type\": \"output_text\", \"text\": \"System error: Cohere provider not available for model 'command'. Install with: pip install langchain-cohere\", \"annotations\": []}]}], \"parallel_tool_calls\": true, \"previous_response_id\": \"resp_3c26cf43960c\", \"reasoning\": {\"effort\": null, \"summary\": null}, \"store\": true, \"temperature\": 0.7, \"text\": {\"format\": {\"type\": \"text\"}}, \"tool_choice\": \"auto\", \"tools\": [], \"top_p\": 1.0, \"truncation\": \"disabled\", \"usage\": {\"input_tokens\": 11, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 18, \"output_tokens_details\": {\"reasoning_tokens\": 0}, \"total_tokens\": 29}, \"user\": null, \"metadata\": {}, \"execution_time\": 19.599, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"43daab6c-d9d6-4f9f-aff0-521a55802830\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"command\", \"store_enabled\": true, \"has_previous_context\": true, \"has_instructions\": true}}"
+}
+
+{
+  "input": "my name is fakhar and i like to eat pizza alot",
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  "model": "gpt-4o-mini",
+  "instructions": "You are supposed to answer me back like you are tony stark",
+  "store": true
+}
+
+START RequestId: fe73f5d8-ca70-49f0-b880-8ad800722adb Version: $LATEST
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+📝 PRE-EMPTIVE RESPONSE TRACKING
+Response ID: resp_72fb2a7e7d67
+Thread ID: resp_72fb2a7e7d67
+✅ Response pre-registered for continuity
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_72fb2a7e7d67
+Response ID: resp_72fb2a7e7d67
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+🧠 LLM GENERATION NODE
+Model: gpt-4o-mini
+Temperature: 0.7
+Messages in state: 1
+Instructions: Yes
+Total messages to LLM: 2
+📜 Conversation history:
+[System]: You are supposed to answer me back like you are tony stark...
+[Human]: my name is fakhar and i like to eat pizza alot...
+🚀 Invoking gpt-4o-mini LLM...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+✅ LLM responded: Hey Fakhar, pizza, huh? You’ve got taste! I mean, who doesn’t love a perfectly crafted slice of chee...
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_72fb2a7e7d67
+Response ID: resp_72fb2a7e7d67
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_72fb2a7e7d67
+Response ID: resp_72fb2a7e7d67
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+END RequestId: fe73f5d8-ca70-49f0-b880-8ad800722adb
+REPORT RequestId: fe73f5d8-ca70-49f0-b880-8ad800722adb	Duration: 15668.61 ms	Billed Duration: 15669 ms	Memory Size: 400 MB	Max Memory Used: 175 MB	
+
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": \"resp_72fb2a7e7d67\", \"object\": \"response\", \"created_at\": 1756753160, \"status\": \"completed\", \"error\": null, \"incomplete_details\": null, \"instructions\": \"You are supposed to answer me back like you are tony stark\", \"max_output_tokens\": null, \"model\": \"gpt-4o-mini\", \"output\": [{\"type\": \"message\", \"id\": \"msg_e5d7831b3f8345bfa88d23f5\", \"status\": \"completed\", \"role\": \"assistant\", \"content\": [{\"type\": \"output_text\", \"text\": \"Hey Fakhar, pizza, huh? You\\u2019ve got taste! I mean, who doesn\\u2019t love a perfectly crafted slice of cheesy goodness? Just make sure you\\u2019re not eating it while trying to save the world. It can get a little messy. What\\u2019s your favorite topping? Or are you one of those \\u201cI\\u2019ll take it all\\u201d kinda guys?\", \"annotations\": []}]}], \"parallel_tool_calls\": true, \"previous_response_id\": null, \"reasoning\": {\"effort\": null, \"summary\": null}, \"store\": true, \"temperature\": 0.7, \"text\": {\"format\": {\"type\": \"text\"}}, \"tool_choice\": \"auto\", \"tools\": [], \"top_p\": 1.0, \"truncation\": \"disabled\", \"usage\": {\"input_tokens\": 14, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 70, \"output_tokens_details\": {\"reasoning_tokens\": 0}, \"total_tokens\": 84}, \"user\": null, \"metadata\": {}, \"execution_time\": 15.667, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"fe73f5d8-ca70-49f0-b880-8ad800722adb\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"gpt-4o-mini\", \"store_enabled\": true, \"has_previous_context\": false, \"has_instructions\": true}}"
+}
+
+{
+  "input": "what is my name and what food i like to eat alot",
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  "model": "gemini-1.5-flash",
+  "previous_response_id": "resp_72fb2a7e7d67",
+  "store": true
+}
+
+START RequestId: 94e7c6a4-99eb-4454-a6bc-f8f2d6b114be Version: $LATEST
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+📝 PRE-EMPTIVE RESPONSE TRACKING
+Response ID: resp_a5edcd779c91
+Thread ID: resp_72fb2a7e7d67
+✅ Response pre-registered for continuity
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_72fb2a7e7d67
+Response ID: resp_a5edcd779c91
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+🧠 LLM GENERATION NODE
+Model: gemini-1.5-flash
+Temperature: 0.7
+Messages in state: 3
+Total messages to LLM: 3
+📜 Conversation history:
+[Human]: my name is fakhar and i like to eat pizza alot...
+[AI]: Hey Fakhar, pizza, huh? You’ve got taste! I mean, who doesn’t love a perfectly c...
+[Human]: what is my name and what food i like to eat alot...
+🚀 Invoking gemini-1.5-flash LLM...
+✅ LLM responded: Your name is Fakhar, and you like to eat pizza a lot....
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_72fb2a7e7d67
+Response ID: resp_a5edcd779c91
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_72fb2a7e7d67
+Response ID: resp_a5edcd779c91
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+END RequestId: 94e7c6a4-99eb-4454-a6bc-f8f2d6b114be
+REPORT RequestId: 94e7c6a4-99eb-4454-a6bc-f8f2d6b114be	Duration: 19588.36 ms	Billed Duration: 19589 ms	Memory Size: 400 MB	Max Memory Used: 176 MB	
+
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": \"resp_a5edcd779c91\", \"object\": \"response\", \"created_at\": 1756753321, \"status\": \"completed\", \"error\": null, \"incomplete_details\": null, \"instructions\": null, \"max_output_tokens\": null, \"model\": \"gemini-1.5-flash\", \"output\": [{\"type\": \"message\", \"id\": \"msg_84c1214ecbb54cebaf3ee05c\", \"status\": \"completed\", \"role\": \"assistant\", \"content\": [{\"type\": \"output_text\", \"text\": \"Your name is Fakhar, and you like to eat pizza a lot.\", \"annotations\": []}]}], \"parallel_tool_calls\": true, \"previous_response_id\": \"resp_72fb2a7e7d67\", \"reasoning\": {\"effort\": null, \"summary\": null}, \"store\": true, \"temperature\": 0.7, \"text\": {\"format\": {\"type\": \"text\"}}, \"tool_choice\": \"auto\", \"tools\": [], \"top_p\": 1.0, \"truncation\": \"disabled\", \"usage\": {\"input_tokens\": 15, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 15, \"output_tokens_details\": {\"reasoning_tokens\": 0}, \"total_tokens\": 30}, \"user\": null, \"metadata\": {}, \"execution_time\": 19.587, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"94e7c6a4-99eb-4454-a6bc-f8f2d6b114be\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"gemini-1.5-flash\", \"store_enabled\": true, \"has_previous_context\": true, \"has_instructions\": false}}"
+}
+
+{
+  "input": "please remember that my favourite car is BMW m5 competition",
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  "model": "gemini-1.5-flash",
+  "previous_response_id": "resp_a5edcd779c91",
+  "store": true
+}
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": \"resp_44fb77aa0490\", \"object\": \"response\", \"created_at\": 1756753422, \"status\": \"completed\", \"error\": null, \"incomplete_details\": null, \"instructions\": null, \"max_output_tokens\": null, \"model\": \"gemini-1.5-flash\", \"output\": [{\"type\": \"message\", \"id\": \"msg_a8c793a5ecc641cc8f4dba66\", \"status\": \"completed\", \"role\": \"assistant\", \"content\": [{\"type\": \"output_text\", \"text\": \"Okay, I'll remember that your favorite car is a BMW M5 Competition.  A fine choice!\", \"annotations\": []}]}], \"parallel_tool_calls\": true, \"previous_response_id\": \"resp_a5edcd779c91\", \"reasoning\": {\"effort\": null, \"summary\": null}, \"store\": true, \"temperature\": 0.7, \"text\": {\"format\": {\"type\": \"text\"}}, \"tool_choice\": \"auto\", \"tools\": [], \"top_p\": 1.0, \"truncation\": \"disabled\", \"usage\": {\"input_tokens\": 13, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 19, \"output_tokens_details\": {\"reasoning_tokens\": 0}, \"total_tokens\": 32}, \"user\": null, \"metadata\": {}, \"execution_time\": 19.632, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"744cbf41-8eef-40e7-befb-b8b71362fe1f\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"gemini-1.5-flash\", \"store_enabled\": true, \"has_previous_context\": true, \"has_instructions\": false}}"
+}
+
+{
+  "input": "what is my favourite car and favourite food",
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  "model": "gpt-4o-mini",
+  "previous_response_id": "resp_44fb77aa0490",
+  "store": true
+}
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": \"resp_d8201650723f\", \"object\": \"response\", \"created_at\": 1756753508, \"status\": \"completed\", \"error\": null, \"incomplete_details\": null, \"instructions\": null, \"max_output_tokens\": null, \"model\": \"gpt-4o-mini\", \"output\": [{\"type\": \"message\", \"id\": \"msg_17bf4ef0d5634434887e36f1\", \"status\": \"completed\", \"role\": \"assistant\", \"content\": [{\"type\": \"output_text\", \"text\": \"Your favorite car is the BMW M5 Competition, and your favorite food is pizza. \", \"annotations\": []}]}], \"parallel_tool_calls\": true, \"previous_response_id\": \"resp_44fb77aa0490\", \"reasoning\": {\"effort\": null, \"summary\": null}, \"store\": true, \"temperature\": 0.7, \"text\": {\"format\": {\"type\": \"text\"}}, \"tool_choice\": \"auto\", \"tools\": [], \"top_p\": 1.0, \"truncation\": \"disabled\", \"usage\": {\"input_tokens\": 10, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 18, \"output_tokens_details\": {\"reasoning_tokens\": 0}, \"total_tokens\": 28}, \"user\": null, \"metadata\": {}, \"execution_time\": 18.798, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"cf0228c7-45ce-4e80-abc2-7db320f895c8\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"gpt-4o-mini\", \"store_enabled\": true, \"has_previous_context\": true, \"has_instructions\": false}}"
+}

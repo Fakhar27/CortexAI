@@ -1,0 +1,236 @@
+{
+  "input": "hi i am fakhar",
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  "model": "claude-3-haiku",
+  "store": true
+}
+
+Warning: Cohere not available: cannot import name 'ChatResponse' from 'cohere.types' (/var/task/cohere/types/__init__.py)
+START RequestId: abf35b68-f230-45ac-bbc2-c9cfa4cfc8b2 Version: $LATEST
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+[WARNING]	2025-09-01T19:18:01.133Z	abf35b68-f230-45ac-bbc2-c9cfa4cfc8b2	Input validation failed: Model 'claude-3-haiku' is not supported. Available models: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo, gemini-1.5-flash, gemini-1.5-pro, gemini-1.0-pro, command-r, command-r-plus, command, cohere
+END RequestId: abf35b68-f230-45ac-bbc2-c9cfa4cfc8b2
+REPORT RequestId: abf35b68-f230-45ac-bbc2-c9cfa4cfc8b2	Duration: 3919.38 ms	Billed Duration: 7191 ms	Memory Size: 400 MB	Max Memory Used: 211 MB	Init Duration: 3270.95 ms	
+
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": null, \"object\": \"response\", \"created_at\": 1756754281, \"status\": \"failed\", \"error\": {\"message\": \"Model 'claude-3-haiku' is not supported. Available models: gpt-4o, gpt-4o-mini, gpt-4-turbo, gpt-3.5-turbo, gemini-1.5-flash, gemini-1.5-pro, gemini-1.0-pro, command-r, command-r-plus, command, cohere\", \"type\": \"invalid_request_error\", \"param\": \"model\", \"code\": \"invalid_value\"}, \"incomplete_details\": null, \"instructions\": null, \"max_output_tokens\": null, \"model\": null, \"output\": [], \"parallel_tool_calls\": null, \"previous_response_id\": null, \"reasoning\": null, \"store\": null, \"temperature\": null, \"text\": null, \"tool_choice\": null, \"tools\": null, \"top_p\": null, \"truncation\": null, \"usage\": null, \"user\": null, \"metadata\": null, \"execution_time\": 3.916, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"abf35b68-f230-45ac-bbc2-c9cfa4cfc8b2\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"claude-3-haiku\", \"store_enabled\": true, \"has_previous_context\": false, \"has_instructions\": false}}"
+}
+
+
+
+{
+  "input": "hi i am fakhar",
+  "model": "gpt-4o-mini",
+  "store": true,
+  "db_url": "postgresql://postgres:postgres@localhost:5432/cortex"
+}
+
+
+START RequestId: 229ed54e-f7ad-4d74-8124-704b87482fe9 Version: $LATEST
+✅ Connecting to PostgreSQL database...
+END RequestId: 229ed54e-f7ad-4d74-8124-704b87482fe9
+REPORT RequestId: 229ed54e-f7ad-4d74-8124-704b87482fe9	Duration: 5.33 ms	Billed Duration: 6 ms	Memory Size: 400 MB	Max Memory Used: 212 MB	
+
+
+{
+  "statusCode": 500,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"error\": \"Failed to connect to PostgreSQL: connection is bad: no error details available\\nMultiple connection attempts failed. All failures were:\\n- host: 'localhost', port: '5432', hostaddr: '127.0.0.1': connection failed: connection to server at \\\"127.0.0.1\\\", port 5432 failed: Connection refused\\n\\tIs the server running on that host and accepting TCP/IP connections?\\n- host: 'localhost', port: '5432', hostaddr: '::1': connection is bad: no error details available\\nConnection string: postgresql://postgres:postgres...\\nFormat: postgresql://user:pass@host:port/database\", \"error_type\": \"internal_error\", \"execution_time\": 0.001, \"context\": {\"function_name\": \"cortex\", \"request_id\": \"229ed54e-f7ad-4d74-8124-704b87482fe9\"}}"
+}
+
+
+{
+  "input": "hi i am fakhar",
+  "model": "gpt-4o-mini",
+  "store": true,
+  "db_url": ""
+}
+
+START RequestId: 18d68cbb-5824-40ea-8546-4ccce0433cd3 Version: $LATEST
+END RequestId: 18d68cbb-5824-40ea-8546-4ccce0433cd3
+REPORT RequestId: 18d68cbb-5824-40ea-8546-4ccce0433cd3	Duration: 1.12 ms	Billed Duration: 2 ms	Memory Size: 400 MB	Max Memory Used: 212 MB	
+
+
+{
+  "statusCode": 400,
+  "headers": {
+    "Content-Type": "application/json"
+  },
+  "body": "{\"error\": \"Missing required parameter: 'db_url'\", \"required_fields\": [\"input\", \"db_url\"], \"optional_fields\": [\"model\", \"previous_response_id\", \"instructions\", \"store\", \"temperature\"]}"
+}
+
+{
+  "input": "hi i am fakhar",
+  "model": "gpt-4o-mini",
+  "store": true,
+  "temperature": 2.5,
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
+}
+
+START RequestId: 10243988-23e2-4fe1-a77b-3f9f02675e3a Version: $LATEST
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+[WARNING]	2025-09-01T19:24:18.076Z	10243988-23e2-4fe1-a77b-3f9f02675e3a	Input validation failed: Temperature must be between 0 and 2.0
+END RequestId: 10243988-23e2-4fe1-a77b-3f9f02675e3a
+REPORT RequestId: 10243988-23e2-4fe1-a77b-3f9f02675e3a	Duration: 3862.56 ms	Billed Duration: 3863 ms	Memory Size: 400 MB	Max Memory Used: 213 MB	
+
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": null, \"object\": \"response\", \"created_at\": 1756754658, \"status\": \"failed\", \"error\": {\"message\": \"Temperature must be between 0 and 2.0\", \"type\": \"invalid_request_error\", \"param\": \"temperature\", \"code\": \"invalid_value\"}, \"incomplete_details\": null, \"instructions\": null, \"max_output_tokens\": null, \"model\": null, \"output\": [], \"parallel_tool_calls\": null, \"previous_response_id\": null, \"reasoning\": null, \"store\": null, \"temperature\": null, \"text\": null, \"tool_choice\": null, \"tools\": null, \"top_p\": null, \"truncation\": null, \"usage\": null, \"user\": null, \"metadata\": null, \"execution_time\": 3.844, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"10243988-23e2-4fe1-a77b-3f9f02675e3a\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"gpt-4o-mini\", \"store_enabled\": true, \"has_previous_context\": false, \"has_instructions\": false}}"
+}
+
+
+{
+  "input": "hi i am fakhar and i am a full stack developer with expertise in django,nextjs,aws and i grauduated from nust with a cgpa of 3.51 and majored in software engineering and currently making an open source library called cortex",
+  "model": "gpt-4o-mini",
+  "store": true,
+  "temperature": 0.3,
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
+}
+
+
+START RequestId: 32a0841f-c96d-4d0f-8881-02562ffcdb58 Version: $LATEST
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+📝 PRE-EMPTIVE RESPONSE TRACKING
+Response ID: resp_9b9c14507b1a
+Thread ID: resp_9b9c14507b1a
+✅ Response pre-registered for continuity
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_9b9c14507b1a
+Response ID: resp_9b9c14507b1a
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+🧠 LLM GENERATION NODE
+Model: gpt-4o-mini
+Temperature: 0.3
+Messages in state: 1
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+Total messages to LLM: 1
+🚀 Invoking gpt-4o-mini LLM...
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_9b9c14507b1a
+Response ID: resp_9b9c14507b1a
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ LLM responded: Hi Fakhar! It's great to meet you. It sounds like you have a solid background in software developmen...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_9b9c14507b1a
+Response ID: resp_9b9c14507b1a
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+END RequestId: 32a0841f-c96d-4d0f-8881-02562ffcdb58
+REPORT RequestId: 32a0841f-c96d-4d0f-8881-02562ffcdb58	Duration: 15410.43 ms	Billed Duration: 15411 ms	Memory Size: 400 MB	Max Memory Used: 227 MB	
+
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": \"resp_9b9c14507b1a\", \"object\": \"response\", \"created_at\": 1756754939, \"status\": \"completed\", \"error\": null, \"incomplete_details\": null, \"instructions\": null, \"max_output_tokens\": null, \"model\": \"gpt-4o-mini\", \"output\": [{\"type\": \"message\", \"id\": \"msg_0809b068e4494d249e441baa\", \"status\": \"completed\", \"role\": \"assistant\", \"content\": [{\"type\": \"output_text\", \"text\": \"Hi Fakhar! It's great to meet you. It sounds like you have a solid background in software development, especially with your expertise in Django, Next.js, and AWS. Graduating from NUST with a CGPA of 3.51 is an impressive achievement as well!\\n\\nYour work on the open-source library called Cortex sounds intriguing. Could you share more about what Cortex does and what inspired you to create it? Additionally, if you have any specific questions or topics you'd like to discuss, feel free to let me know!\", \"annotations\": []}]}], \"parallel_tool_calls\": true, \"previous_response_id\": null, \"reasoning\": {\"effort\": null, \"summary\": null}, \"store\": true, \"temperature\": 0.3, \"text\": {\"format\": {\"type\": \"text\"}}, \"tool_choice\": \"auto\", \"tools\": [], \"top_p\": 1.0, \"truncation\": \"disabled\", \"usage\": {\"input_tokens\": 50, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 110, \"output_tokens_details\": {\"reasoning_tokens\": 0}, \"total_tokens\": 160}, \"user\": null, \"metadata\": {}, \"execution_time\": 15.409, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"32a0841f-c96d-4d0f-8881-02562ffcdb58\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"gpt-4o-mini\", \"store_enabled\": true, \"has_previous_context\": false, \"has_instructions\": false}}"
+}
+
+
+{
+  "input": "who am i? what major did i do and what is the name of library i am making",
+  "model": "gemini-1.5-flash",
+  "store": true,
+  "temperature": 0.3,
+  "previous_response_id":"resp_9b9c14507b1a",
+  "db_url": "postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
+}
+
+START RequestId: 9ed63ab3-44f2-4230-9405-548a68abdca3 Version: $LATEST
+✅ Connecting to PostgreSQL database...
+📌 Detected connection pooler - disabling prepared statements
+Using exact URL: postgresql://postgres.tqovtjyylrykgpehbfdl:Fakhar_27_1$@aws-...
+✅ Successfully connected to PostgreSQL
+📝 PRE-EMPTIVE RESPONSE TRACKING
+Response ID: resp_c3c2ea555f08
+Thread ID: resp_9b9c14507b1a
+✅ Response pre-registered for continuity
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_9b9c14507b1a
+Response ID: resp_c3c2ea555f08
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+🧠 LLM GENERATION NODE
+Model: gemini-1.5-flash
+Temperature: 0.3
+Messages in state: 3
+Total messages to LLM: 3
+📜 Conversation history:
+[Human]: hi i am fakhar and i am a full stack developer with expertise in django,nextjs,a...
+[AI]: Hi Fakhar! It's great to meet you. It sounds like you have a solid background in...
+[Human]: who am i? what major did i do and what is the name of library i am making...
+🚀 Invoking gemini-1.5-flash LLM...
+✅ LLM responded: You are Fakhar, a full-stack developer.  You majored in Software Engineering. You are making an open...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_9b9c14507b1a
+Response ID: resp_c3c2ea555f08
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+🔍 DEBUG: Attempting to save checkpoint:
+Thread ID: resp_9b9c14507b1a
+Response ID: resp_c3c2ea555f08
+Config has checkpoint_ns: True
+🔒 Acquiring lock for pooled connection save...
+✅ PostgresSaver.put() returned successfully
+✅ Explicitly committed transaction for pooled connection
+🔓 Released lock for pooled connection
+END RequestId: 9ed63ab3-44f2-4230-9405-548a68abdca3
+REPORT RequestId: 9ed63ab3-44f2-4230-9405-548a68abdca3	Duration: 19547.68 ms	Billed Duration: 19548 ms	Memory Size: 400 MB	Max Memory Used: 237 MB	
+
+
+{
+  "statusCode": 200,
+  "headers": {
+    "Content-Type": "application/json",
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+    "Access-Control-Allow-Methods": "POST,OPTIONS"
+  },
+  "body": "{\"id\": \"resp_c3c2ea555f08\", \"object\": \"response\", \"created_at\": 1756755094, \"status\": \"completed\", \"error\": null, \"incomplete_details\": null, \"instructions\": null, \"max_output_tokens\": null, \"model\": \"gemini-1.5-flash\", \"output\": [{\"type\": \"message\", \"id\": \"msg_a51014bdad91455fbdcb813b\", \"status\": \"completed\", \"role\": \"assistant\", \"content\": [{\"type\": \"output_text\", \"text\": \"You are Fakhar, a full-stack developer.  You majored in Software Engineering. You are making an open-source library called Cortex.\", \"annotations\": []}]}], \"parallel_tool_calls\": true, \"previous_response_id\": \"resp_9b9c14507b1a\", \"reasoning\": {\"effort\": null, \"summary\": null}, \"store\": true, \"temperature\": 0.3, \"text\": {\"format\": {\"type\": \"text\"}}, \"tool_choice\": \"auto\", \"tools\": [], \"top_p\": 1.0, \"truncation\": \"disabled\", \"usage\": {\"input_tokens\": 23, \"input_tokens_details\": {\"cached_tokens\": 0}, \"output_tokens\": 24, \"output_tokens_details\": {\"reasoning_tokens\": 0}, \"total_tokens\": 47}, \"user\": null, \"metadata\": {}, \"execution_time\": 19.546, \"lambda_context\": {\"function_name\": \"cortex\", \"memory_limit\": \"400\", \"request_id\": \"9ed63ab3-44f2-4230-9405-548a68abdca3\"}, \"request_metadata\": {\"db_url_host\": \"aws-1-ap-southeast-1.pooler.supabase.com:6543\", \"model_requested\": \"gemini-1.5-flash\", \"store_enabled\": true, \"has_previous_context\": true, \"has_instructions\": false}}"
+}
