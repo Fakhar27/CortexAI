@@ -8,12 +8,12 @@ langchain-core==0.3.72
 # LLM providers
 langchain-openai==0.3.28
 langchain-google-genai==2.1.9
-langchain-cohere==0.4.2
 langchain-anthropic==0.3.18
 
 # Database
 psycopg-binary==3.2.9
-cohere==5.11.0
+cohere==5.13.11
+langchain-cohere==0.4.2
 
 SQLAlchemy==2.0.42
 numpy==1.26.4

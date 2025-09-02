@@ -2,7 +2,13 @@ import os
 import json
 import time
 from cortex import Client
-
+try:
+    from langchain_cohere import ChatCohere
+    print("✅ ChatCohere imported successfully in Lambda")
+    COHERE_AVAILABLE = True
+except ImportError as e:
+    print(f"❌ ChatCohere import failed in Lambda: {e}")
+    COHERE_AVAILABLE = False
 
 def lambda_handler(event, context):
     """
