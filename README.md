@@ -7,7 +7,7 @@ Cortex is a powerful Python framework that replicates OpenAI's Responses API fun
 ## Why Cortex?
 
 ### Advantages Over OpenAI Responses API
-- **Multi-Provider Support**: Use OpenAI, Google Gemini, Cohere, and Anthropic models seamlessly
+- **Multi-Provider Support**: Use OpenAI, Google Gemini, Cohere, and Opensource local models seamlessly
 - **Cost Effective**: Access to free and cheaper LLM alternatives 
 - **Cross-Model Conversations**: Switch models mid-conversation while maintaining context
 - **Flexible Deployment**: Local development, Docker containers, and serverless (AWS Lambda)
