@@ -42,8 +42,6 @@ The system automatically detects connection poolers (like Supabase) and applies 
 ### Cohere
 - `command-r`, `command-r-plus`, `command`
 
-### Anthropic
-- `claude-3-opus`, `claude-3-sonnet`, `claude-3-haiku`
 
 ## Database Support
 
