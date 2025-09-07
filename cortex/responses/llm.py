@@ -4,7 +4,6 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Cohere provider
 try:
     from langchain_cohere import ChatCohere
     COHERE_AVAILABLE = True
@@ -13,7 +12,6 @@ except ImportError as e:
     COHERE_AVAILABLE = False
     ChatCohere = None
 
-# OpenAI provider
 try:
     from langchain_openai import ChatOpenAI
     OPENAI_AVAILABLE = True
@@ -22,7 +20,6 @@ except ImportError as e:
     OPENAI_AVAILABLE = False
     ChatOpenAI = None
 
-# Google provider
 try:
     from langchain_google_genai import ChatGoogleGenerativeAI
     GOOGLE_AVAILABLE = True
@@ -33,7 +30,6 @@ except ImportError as e:
 
 from cortex.models.registry import get_model_config
 
-# Provider-specific error mappings for standardized error handling
 ERROR_MAPPINGS = {
     "openai": {
         "rate_limit": ["rate_limit_exceeded", "429", "rate limit"],
@@ -67,7 +63,6 @@ def validate_api_key(provider: str, api_key_env: str) -> None:
         ValueError: If API key is missing
     """
     if api_key_env and not os.getenv(api_key_env):
-        # Provide helpful message based on provider
         provider_help = {
             "openai": "Get your API key from https://platform.openai.com/api-keys",
             "google": "Get your API key from https://makersuite.google.com/app/apikey",
@@ -110,7 +105,6 @@ def handle_llm_error(error: Exception, provider: str) -> dict:
                 "original_error": str(error)
             }
     
-    # Default error response
     return {
         "error_type": "unknown",
         "message": f"An error occurred with {provider}: {str(error)}",
@@ -132,18 +126,14 @@ def get_llm(model_str: str, temperature: float = None):
     Raises:
         ValueError: If model not found or provider not supported
     """
-    # Get model configuration from registry (handles deprecation warnings)
     config = get_model_config(model_str)
     
-    # Validate API key early
     api_key_env = config.get("api_key_env")
     if api_key_env:
         validate_api_key(config["provider"], api_key_env)
     
-    # Use provided temperature or fall back to registry default
     final_temperature = temperature if temperature is not None else config.get("temperature", 0.7)
     
-    # Route to appropriate provider
     match config["provider"]:
         case "openai":
             if not OPENAI_AVAILABLE:

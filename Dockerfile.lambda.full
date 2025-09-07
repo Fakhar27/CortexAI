@@ -1,8 +1,6 @@
-# Stage 1: The Builder
-# We add a few more common development libraries
+
 FROM public.ecr.aws/lambda/python:3.11 AS builder
 
-# Install build dependencies, including ones for cryptography and other common packages
 RUN yum update -y && \
     yum install -y \
     gcc \
@@ -13,11 +11,8 @@ RUN yum update -y && \
     openssl-devel \
     && yum clean all
 
-# Copy only the requirements file
 COPY requirements-lambda.txt .
 
-# Install packages into a specific directory. The --verbose flag gives more detailed logs.
-# Using --no-cache-dir can sometimes help with build issues.
 RUN pip install \
     --target ./packages \
     --no-cache-dir \
@@ -26,16 +21,12 @@ RUN pip install \
 
 # ---
 
-    
-# Stage 2: The Final, Lean Image
+
 FROM public.ecr.aws/lambda/python:3.11
 
-# Copy the pre-compiled packages from the builder stage
 COPY --from=builder /var/task/packages ${LAMBDA_TASK_ROOT}
 
-# Copy your application code
 COPY cortex/ ${LAMBDA_TASK_ROOT}/cortex/
 COPY lambda_handler.py ${LAMBDA_TASK_ROOT}/
 
-# Set the handler
 CMD ["lambda_handler.lambda_handler"]
