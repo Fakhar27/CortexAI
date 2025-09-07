@@ -22,7 +22,6 @@ def _create_error_response(message: str, error_type: str = "api_error", param: O
         code: Error code
         response_id: Response ID to include (for partial failures - allows conversation continuity)
     """
-    # Build error object
     error_obj = {
         "message": message,
         "type": error_type
@@ -33,9 +32,8 @@ def _create_error_response(message: str, error_type: str = "api_error", param: O
     if code:
         error_obj["code"] = code
     
-    # Return full response structure with error field populated
     return {
-        "id": response_id,  # Include response_id if provided (enables conversation continuity)
+        "id": response_id,  
         "object": "response",
         "created_at": int(time.time()),
         "status": "failed",
@@ -74,7 +72,6 @@ def _validate_create_inputs(input: str, model: str, temperature: float, metadata
     Returns:
         Error response dict if validation fails, None if valid
     """
-    # Validate input
     if not input:
         return _create_error_response(
             "Input cannot be empty",
@@ -99,7 +96,6 @@ def _validate_create_inputs(input: str, model: str, temperature: float, metadata
             "invalid_value"
         )
     
-    # Validate input length (50,000 chars is reasonable limit)
     if len(input) > 50000:
         return _create_error_response(
             f"Input too long. Maximum length is 50,000 characters, got {len(input)}",
@@ -108,7 +104,6 @@ def _validate_create_inputs(input: str, model: str, temperature: float, metadata
             "invalid_value"
         )
     
-    # Validate model
     if not model or not isinstance(model, str):
         return _create_error_response(
             "Model must be a non-empty string",
@@ -117,7 +112,6 @@ def _validate_create_inputs(input: str, model: str, temperature: float, metadata
             "invalid_value"
         )
     
-    # Validate model exists in registry (fail fast)
     if model not in MODELS:
         available_models = list(MODELS.keys())
         return _create_error_response(
@@ -127,7 +121,6 @@ def _validate_create_inputs(input: str, model: str, temperature: float, metadata
             "invalid_value"
         )
     
-    # Validate temperature
     if not isinstance(temperature, (int, float)):
         return _create_error_response(
             "Temperature must be a number",
@@ -144,7 +137,6 @@ def _validate_create_inputs(input: str, model: str, temperature: float, metadata
             "invalid_value"
         )
     
-    # Validate metadata if provided
     if metadata is not None:
         if not isinstance(metadata, dict):
             return _create_error_response(
@@ -154,7 +146,6 @@ def _validate_create_inputs(input: str, model: str, temperature: float, metadata
                 "invalid_type"
             )
         
-        # Check metadata size (OpenAI limits this)
         if len(str(metadata)) > 1000:
             return _create_error_response(
                 "Metadata too large. Maximum size is 1000 characters",
@@ -163,7 +154,7 @@ def _validate_create_inputs(input: str, model: str, temperature: float, metadata
                 "invalid_value"
             )
     
-    return None  # All validations passed
+    return None  
 
 
 def create_response(
@@ -194,33 +185,25 @@ def create_response(
     Returns:
         OpenAI-compatible response dict or error
     """
-    # Step 0: Input Validation
     validation_error = _validate_create_inputs(input, model, temperature, metadata)
     if validation_error:
         logger.warning(f"Input validation failed: {validation_error['error']['message']}")
         return validation_error
     
-    # Step 0.5: Handle request-specific db_url if provided
-    # This allows users in serverless environments to specify their database per request
     use_temp_graph = False
     temp_graph = None
     checkpointer_to_use = api_instance.checkpointer
     
-    # Treat empty string as None (use instance default)
     if db_url == "":
         db_url = None
     
     if db_url is not None and db_url != api_instance.db_url:
-        # User provided a different db_url for this request
-        # Create a temporary checkpointer and graph for this request
         
         try:
             logger.info(f"Creating temporary checkpointer for request-specific db_url")
-            # Create temporary checkpointer with the request's db_url
             temp_checkpointer = get_checkpointer(db_url=db_url)
             checkpointer_to_use = temp_checkpointer
             
-            # Create temporary graph with this checkpointer
             workflow = StateGraph(ResponsesState)
             workflow.add_node("generate", api_instance._generate_node)
             workflow.set_entry_point("generate")
@@ -229,7 +212,6 @@ def create_response(
             use_temp_graph = True
             
         except DatabaseError as e:
-            # Database configuration error - return appropriate error response
             logger.error(f"Failed to create temporary checkpointer: {e}")
             return _create_error_response(
                 str(e),
@@ -245,14 +227,11 @@ def create_response(
                 code="database_connection_error"
             )
     
-    # Step 1: ID Generation
-    # Always generate a new response_id for this response
+    
     response_id = f"resp_{uuid.uuid4().hex[:12]}"
     
-    # Step 2: Validate previous_response_id if provided
     if previous_response_id:
         try:
-            # Check if the previous response exists in database
             if not checkpointer_to_use.response_exists(previous_response_id):
                 logger.info(f"Previous response not found: {previous_response_id}")
                 return _create_error_response(
@@ -262,11 +241,8 @@ def create_response(
                     "resource_not_found"
                 )
             
-            # Get the thread_id that this response belongs to
             thread_id = checkpointer_to_use.get_thread_for_response(previous_response_id)
             if not thread_id:
-                # Fallback to using previous_response_id as thread_id
-                # This handles old conversations before we added tracking
                 logger.warning(f"No thread_id found for response {previous_response_id}, using as thread_id")
                 thread_id = previous_response_id
                 
@@ -278,63 +254,47 @@ def create_response(
                 code="database_error"
             )
     else:
-        # New conversation - thread_id same as response_id
         thread_id = response_id
     
-    # Step 3: State Preparation
-    # Create initial state matching ResponsesState structure
-    # CRITICAL FIX: Add system message to messages array for NEW conversations
     messages = []
     if instructions and not previous_response_id:
-        # Only add system message for NEW conversations (not continuing ones)
         from langchain_core.messages import SystemMessage
         messages.append(SystemMessage(content=instructions))
     messages.append(HumanMessage(content=input))
     
     initial_state = {
-        "messages": messages,  # Messages array includes system message for persistence
+        "messages": messages,  
         "response_id": response_id,
         "previous_response_id": previous_response_id,
         "input": input,
-        # Per OpenAI spec: instructions are discarded when previous_response_id is provided
-        # This allows clean system message swapping between responses
         "instructions": instructions if not previous_response_id else None,
         "model": model,
         "store": store,
-        "temperature": temperature  # Pass temperature to be used in _generate_node
+        "temperature": temperature  
     }
     
-    # Step 4: Graph Invocation with Smart Checkpointer
-    # Configure with thread_id, store flag, AND response_id
-    # CRITICAL FIX: Include checkpoint_ns for PostgresSaver compatibility
     config = {
         "configurable": {
             "thread_id": thread_id,
-            "response_id": response_id,  # Pass this so checkpointer can track it
-            "store": store,  # Pass store flag to SmartCheckpointer
-            "checkpoint_ns": ""  # Required by PostgresSaver - empty string for default namespace
+            "response_id": response_id, 
+            "store": store,  
+            "checkpoint_ns": ""  
         }
     }
     
-    # Step 3.5: Pre-emptive Response Tracking (Option C)
-    # Track the response_id BEFORE invoking LangGraph
-    # This ensures conversation continuity even if LangGraph fails
     if store and checkpointer_to_use:
         try:
             print(f"\n📝 PRE-EMPTIVE RESPONSE TRACKING")
             print(f"   Response ID: {response_id}")
             print(f"   Thread ID: {thread_id}")
-            # Pre-register this response to ensure continuity
             if hasattr(checkpointer_to_use, 'track_response'):
                 checkpointer_to_use.track_response(response_id, thread_id, was_stored=False)
                 print(f"   ✅ Response pre-registered for continuity")
         except Exception as track_error:
-            # Non-critical - continue even if tracking fails
             print(f"   ⚠️ Pre-tracking failed (non-critical): {track_error}")
             pass
     
-    # Step 4: Graph Invocation with Comprehensive Error Handling
-    max_retries = 2  # Try once, retry once if pipeline error
+    max_retries = 2  
     retry_count = 0
     last_error = None
     
@@ -343,31 +303,21 @@ def create_response(
             if retry_count > 0:
                 print(f"\n🔄 RETRY ATTEMPT {retry_count}/{max_retries-1}")
                 print(f"   Waiting 100ms before retry...")
-                time.sleep(0.1)  # Wait 100ms before retry
+                time.sleep(0.1)  
             
-            # Use temporary graph if created, otherwise use instance graph
             graph_to_use = temp_graph if use_temp_graph else api_instance.graph
             
-            # Invoke the graph with our state and config
-            # The SmartCheckpointer will:
-            # 1. Load previous messages if thread_id exists (get_tuple)
-            # 2. Run through the graph nodes
-            # 3. Track response_id -> thread_id mapping
-            # 4. Save ONLY if store=True (put method checks this)
             logger.info(f"Invoking graph for response {response_id} with model {model} using {'temporary' if use_temp_graph else 'instance'} graph")
             result = graph_to_use.invoke(initial_state, config)
             
-            # Success! Break out of retry loop
             if retry_count > 0:
                 print(f"   ✅ Retry successful!")
             break
             
         except Exception as e:
-            # Store the error for potential retry or final handling
             last_error = e
             error_message = str(e).lower()
             
-            # Check if this is a pipeline error and we should retry
             if "pipeline mode" in error_message or "pipeline" in error_message:
                 retry_count += 1
                 if retry_count < max_retries:
@@ -375,19 +325,15 @@ def create_response(
                     logger.info(f"Pipeline error on attempt {retry_count}, retrying...")
                     continue  # Try again
                 else:
-                    # Max retries exceeded - fall through to error handling
                     print(f"\n❌ Pipeline error persists after {max_retries} attempts")
                     logger.error(f"Graph invocation failed after {max_retries} attempts: {str(e)}")
             else:
-                # Not a pipeline error - don't retry, break out of loop
                 logger.error(f"Graph invocation failed for response {response_id}: {str(e)}", exc_info=True)
                 break
     
-    # If we exit the loop without success, handle the error
     if last_error:
         error_message = str(last_error).lower()
         
-        # CRITICAL: Pipeline mode errors - return WITH response_id for continuity
         if "pipeline mode" in error_message or "pipeline" in error_message:
             print(f"\n⚠️ PIPELINE MODE ERROR AFTER RETRIES - PRESERVING CONTINUITY")
             print(f"   🆔 Returning error WITH response_id: {response_id}")
@@ -399,7 +345,6 @@ def create_response(
                 response_id=response_id  # CRITICAL: Include response_id for continuity
             )
         
-        # Network/API errors
         if any(keyword in error_message for keyword in ['network', 'connection', 'timeout', 'unreachable']):
             return _create_error_response(
                 "AI service is temporarily unavailable due to network issues. Please try again in a moment.",
@@ -407,7 +352,6 @@ def create_response(
                 code="network_error"
             )
         
-        # Authentication/API key errors
         if any(keyword in error_message for keyword in ['api key', 'api_key', 'co_api_key', 'authentication', 'unauthorized', 'forbidden', 'token', 'env']):
             return _create_error_response(
                 "AI service authentication failed. Please check configuration.",
@@ -415,15 +359,12 @@ def create_response(
                 code="authentication_error"
             )
         
-        # Rate limiting errors
         if any(keyword in error_message for keyword in ['rate limit', 'quota', 'too many requests']):
             return _create_error_response(
                 "AI service rate limit exceeded. Please try again later.",
                 "api_error",
                 code="rate_limit_exceeded"
             )
-        
-        # Model-specific errors
         if any(keyword in error_message for keyword in ['model', 'unavailable', 'not found']):
             return _create_error_response(
                 f"Model '{model}' is temporarily unavailable. Please try a different model.",
@@ -432,17 +373,13 @@ def create_response(
                 "model_unavailable"
             )
         
-        # Generic fallback for unexpected errors
         return _create_error_response(
             "An unexpected error occurred while processing your request. Please try again.",
             "api_error",
             code="internal_error"
         )
     
-    # Step 5: Safe Response Processing
     try:
-        # Extract the AI's response from the result
-        # The graph returns updated state with all messages
         if not isinstance(result, dict):
             logger.error(f"Graph returned non-dict result: {type(result)}")
             return _create_error_response(
@@ -460,7 +397,6 @@ def create_response(
                 code="empty_response"
             )
         
-        # Get the last message (AI's response)
         ai_response = all_messages[-1]
         if not ai_response:
             logger.error("Last message in response is None/empty")
@@ -470,7 +406,6 @@ def create_response(
                 code="empty_response"
             )
         
-        # Validate AI response has content
         if not hasattr(ai_response, 'content'):
             logger.error(f"AI response missing content attribute: {type(ai_response)}")
             return _create_error_response(
@@ -479,7 +414,6 @@ def create_response(
                 code="malformed_response"
             )
         
-        # Handle None or empty content
         content = ai_response.content
         if content is None:
             logger.warning("AI response content is None, using empty string")
@@ -496,21 +430,16 @@ def create_response(
             code="processing_error"
         )
     
-    # Step 6: Safe Token Calculation and Response Formatting
     try:
-        # Safe token estimation (handle empty content)
         input_words = len(input.split()) if input else 0
         output_words = len(content.split()) if content else 0
         
-        # Simple token estimation (1 word ≈ 1.3 tokens)
         input_tokens = int(input_words * 1.3)
         output_tokens = int(output_words * 1.3)
         total_tokens = input_tokens + output_tokens
         
-        # Generate message ID for the output message
         message_id = f"msg_{uuid.uuid4().hex[:24]}"
         
-        # Format response to match OpenAI's structure exactly
         response = {
             "id": response_id,
             "object": "response",
@@ -571,9 +500,7 @@ def create_response(
             code="formatting_error"
         )
     
-    # Step 7: Final Response Assembly
     try:
-        # Add metadata (empty dict if not provided to match OpenAI)
         response["metadata"] = metadata if metadata is not None else {}
         
         logger.info(f"Successfully created response {response_id} with {total_tokens} tokens")
