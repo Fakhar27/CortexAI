@@ -26,6 +26,7 @@ RUN pip install \
 
 # ---
 
+    
 # Stage 2: The Final, Lean Image
 FROM public.ecr.aws/lambda/python:3.11
 
