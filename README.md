@@ -336,7 +336,6 @@ Set API keys for the providers you want to use:
 - `OPENAI_API_KEY`: OpenAI models
 - `GOOGLE_API_KEY`: Google Gemini models  
 - `CO_API_KEY`: Cohere models
-- `ANTHROPIC_API_KEY`: Anthropic models
 - `DATABASE_URL`: PostgreSQL connection string
 
 ## Response Format
@@ -363,7 +362,3 @@ Cortex returns OpenAI-compatible response format:
 ## Contributing
 
 Cortex is in active development. We welcome contributions, bug reports, and feature requests.
-
-## License
-
-MIT License - see LICENSE file for details.
