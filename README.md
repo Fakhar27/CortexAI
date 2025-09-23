@@ -7,7 +7,7 @@ Cortex is a powerful Python framework that replicates OpenAI's Responses API fun
 ## Why Cortex?
 
 ### Advantages Over OpenAI Responses API
-- **Multi-Provider Support**: Use OpenAI, Google Gemini, Cohere, and Anthropic models seamlessly
+- **Multi-Provider Support**: Use OpenAI, Google Gemini, Cohere, and Opensource local models seamlessly
 - **Cost Effective**: Access to free and cheaper LLM alternatives 
 - **Cross-Model Conversations**: Switch models mid-conversation while maintaining context
 - **Flexible Deployment**: Local development, Docker containers, and serverless (AWS Lambda)
@@ -42,8 +42,6 @@ The system automatically detects connection poolers (like Supabase) and applies 
 ### Cohere
 - `command-r`, `command-r-plus`, `command`
 
-### Anthropic
-- `claude-3-opus`, `claude-3-sonnet`, `claude-3-haiku`
 
 ## Database Support
 
@@ -338,7 +336,6 @@ Set API keys for the providers you want to use:
 - `OPENAI_API_KEY`: OpenAI models
 - `GOOGLE_API_KEY`: Google Gemini models  
 - `CO_API_KEY`: Cohere models
-- `ANTHROPIC_API_KEY`: Anthropic models
 - `DATABASE_URL`: PostgreSQL connection string
 
 ## Response Format
@@ -365,7 +362,3 @@ Cortex returns OpenAI-compatible response format:
 ## Contributing
 
 Cortex is in active development. We welcome contributions, bug reports, and feature requests.
-
-## License
-
-MIT License - see LICENSE file for details.
