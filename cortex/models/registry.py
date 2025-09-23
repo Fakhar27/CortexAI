@@ -56,38 +56,88 @@ MODELS = {
         "api_key_env": "GOOGLE_API_KEY"
     },
     
-    # Cohere Models
-    "command-r": {
+    # Cohere Models (Updated September 2024)
+    "command-r-08-2024": {
         "provider": "cohere",
-        "model_name": "command-r",
+        "model_name": "command-r-08-2024",
         "temperature": 0.7,
         "max_tokens": 128000,
         "api_key_env": "CO_API_KEY"
     },
-    "command-r-plus": {
+    "command-r-plus-08-2024": {
         "provider": "cohere",
-        "model_name": "command-r-plus",
+        "model_name": "command-r-plus-08-2024",
         "temperature": 0.7,
         "max_tokens": 128000,
         "api_key_env": "CO_API_KEY"
     },
-    "command": {
+    "command-a-03-2025": {
         "provider": "cohere",
-        "model_name": "command",
+        "model_name": "command-a-03-2025",
         "temperature": 0.7,
-        "max_tokens": 4096,
+        "max_tokens": 128000,
         "api_key_env": "CO_API_KEY"
     },
     
-    # Deprecated alias - kept for backward compatibility
-    "cohere": {
+    # Anthropic Claude Models
+    "claude-3-opus": {
+        "provider": "anthropic",
+        "model_name": "claude-3-opus-20240229",
+        "temperature": 0.7,
+        "max_tokens": 200000,
+        "api_key_env": "ANTHROPIC_API_KEY"
+    },
+    "claude-3-sonnet": {
+        "provider": "anthropic",
+        "model_name": "claude-3-sonnet-20240229",
+        "temperature": 0.7,
+        "max_tokens": 200000,
+        "api_key_env": "ANTHROPIC_API_KEY"
+    },
+    "claude-3-haiku": {
+        "provider": "anthropic",
+        "model_name": "claude-3-haiku-20240307",
+        "temperature": 0.7,
+        "max_tokens": 200000,
+        "api_key_env": "ANTHROPIC_API_KEY"
+    },
+    
+    # Deprecated models - kept for backward compatibility
+    "command-r": {
         "provider": "cohere",
-        "model_name": "command-r",
+        "model_name": "command-r-08-2024",
         "temperature": 0.7,
         "max_tokens": 128000,
         "api_key_env": "CO_API_KEY",
         "_deprecated": True,
-        "_replacement": "command-r"
+        "_replacement": "command-r-08-2024"
+    },
+    "command-r-plus": {
+        "provider": "cohere",
+        "model_name": "command-r-plus-08-2024",
+        "temperature": 0.7,
+        "max_tokens": 128000,
+        "api_key_env": "CO_API_KEY",
+        "_deprecated": True,
+        "_replacement": "command-r-plus-08-2024"
+    },
+    "command": {
+        "provider": "cohere",
+        "model_name": "command-a-03-2025",
+        "temperature": 0.7,
+        "max_tokens": 128000,
+        "api_key_env": "CO_API_KEY",
+        "_deprecated": True,
+        "_replacement": "command-a-03-2025"
+    },
+    "cohere": {
+        "provider": "cohere",
+        "model_name": "command-r-08-2024",
+        "temperature": 0.7,
+        "max_tokens": 128000,
+        "api_key_env": "CO_API_KEY",
+        "_deprecated": True,
+        "_replacement": "command-r-08-2024"
     }
 }
 
