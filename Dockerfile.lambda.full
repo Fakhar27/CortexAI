@@ -24,6 +24,9 @@ RUN pip install \
 
 FROM public.ecr.aws/lambda/python:3.11
 
+# Install PostgreSQL runtime libraries
+RUN yum install -y postgresql-libs && yum clean all
+
 COPY --from=builder /var/task/packages ${LAMBDA_TASK_ROOT}
 
 COPY cortex/ ${LAMBDA_TASK_ROOT}/cortex/

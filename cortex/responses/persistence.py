@@ -322,8 +322,11 @@ class PostgresCheckpointerWrapper:
         
         self.connect_kwargs = {}
         if self.is_pooled:
-            self.connect_kwargs['prepare_threshold'] = None  
-            self.connect_kwargs['options'] = '-c statement_timeout=30000'  
+            self.connect_kwargs['prepare_threshold'] = None
+            self.connect_kwargs['options'] = '-c statement_timeout=30000'
+        
+        # Disable GSSAPI to avoid Lambda compatibility issues
+        self.connect_kwargs['gssencmode'] = 'disable'  
         
         self._initialize_connection()
         
@@ -333,17 +336,21 @@ class PostgresCheckpointerWrapper:
             pass
         
         import psycopg
-        with psycopg.connect(connection_string, **self.connect_kwargs) as temp_conn:
-            with temp_conn.cursor() as cursor:
-                cursor.execute("""
-                    CREATE TABLE IF NOT EXISTS response_tracking (
-                        response_id TEXT PRIMARY KEY,
-                        thread_id TEXT NOT NULL,
-                        was_stored BOOLEAN DEFAULT TRUE,
-                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                    )
-                """)
-            temp_conn.commit()
+        try:
+            with psycopg.connect(connection_string, **self.connect_kwargs) as temp_conn:
+                with temp_conn.cursor() as cursor:
+                    cursor.execute("""
+                        CREATE TABLE IF NOT EXISTS response_tracking (
+                            response_id TEXT PRIMARY KEY,
+                            thread_id TEXT NOT NULL,
+                            was_stored BOOLEAN DEFAULT TRUE,
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                        )
+                    """)
+                temp_conn.commit()
+        except Exception as e:
+            # Table might already exist or we don't have permissions
+            print(f"⚠️ Could not create response_tracking table: {str(e)[:100]}")
     
     def _initialize_connection(self):
         """Initialize or reinitialize the database connection"""
@@ -387,13 +394,10 @@ class PostgresCheckpointerWrapper:
                     except:
                         pass
                 
+                # Reinitialize with proper settings
                 self._initialize_connection()
                 
-                try:
-                    self._checkpointer.setup()
-                except:
-                    pass
-                
+                # Don't call setup() on reconnect as it might cause transaction issues
                 print(f"   ✅ Reconnected successfully")
             except Exception as reconnect_error:
                 print(f"   ❌ Reconnection failed: {reconnect_error}")
