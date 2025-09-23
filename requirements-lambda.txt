@@ -11,7 +11,7 @@ langchain-google-genai==2.1.9
 langchain-anthropic==0.3.18
 
 # Database
-psycopg-binary==3.2.9
+psycopg[binary]==3.2.9
 cohere==5.13.11
 langchain-cohere==0.4.2
 

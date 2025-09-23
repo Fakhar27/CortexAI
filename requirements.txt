@@ -12,8 +12,8 @@ langchain-anthropic==0.3.18
 langchain-cohere==0.4.2
 cohere==5.13.11
 
-# Database
-psycopg-binary==3.2.9
+# Database  
+psycopg[binary]==3.2.9
 SQLAlchemy==2.0.42
 
 # Core dependencies

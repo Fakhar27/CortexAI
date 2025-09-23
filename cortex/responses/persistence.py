@@ -322,8 +322,11 @@ class PostgresCheckpointerWrapper:
         
         self.connect_kwargs = {}
         if self.is_pooled:
-            self.connect_kwargs['prepare_threshold'] = None  
-            self.connect_kwargs['options'] = '-c statement_timeout=30000'  
+            self.connect_kwargs['prepare_threshold'] = None
+            self.connect_kwargs['options'] = '-c statement_timeout=30000'
+        
+        # Disable GSSAPI to avoid Lambda compatibility issues
+        self.connect_kwargs['gssencmode'] = 'disable'  
         
         self._initialize_connection()
         
