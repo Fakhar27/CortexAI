@@ -318,11 +318,17 @@ def create_response(
             last_error = e
             error_message = str(e).lower()
             
-            if "pipeline mode" in error_message or "pipeline" in error_message:
+            # Check for various pipeline mode errors
+            pipeline_errors = [
+                "pipeline mode", "pipeline", "failed to enter pipeline", 
+                "cannot enter pipeline", "sending query failed"
+            ]
+            if any(err in error_message for err in pipeline_errors):
                 retry_count += 1
                 if retry_count < max_retries:
                     print(f"\n⚠️ Pipeline mode error detected - will retry")
                     logger.info(f"Pipeline error on attempt {retry_count}, retrying...")
+                    time.sleep(0.1)  # Brief pause to let pooler recover
                     continue  # Try again
                 else:
                     print(f"\n❌ Pipeline error persists after {max_retries} attempts")
@@ -334,14 +340,19 @@ def create_response(
     if last_error:
         error_message = str(last_error).lower()
         
-        if "pipeline mode" in error_message or "pipeline" in error_message:
+        # Check for various pipeline mode errors
+        pipeline_errors = [
+            "pipeline mode", "pipeline", "failed to enter pipeline", 
+            "cannot enter pipeline", "sending query failed"
+        ]
+        if any(err in error_message for err in pipeline_errors):
             print(f"\n⚠️ PIPELINE MODE ERROR AFTER RETRIES - PRESERVING CONTINUITY")
             print(f"   🆔 Returning error WITH response_id: {response_id}")
             print(f"   📝 Conversation can continue from this point")
             return _create_error_response(
-                "Database save partially failed after retries. The AI may have responded but checkpoint save failed. You can continue the conversation.",
+                "Connection pooler temporarily unstable. Please try your request again in a few moments. Your conversation history is preserved.",
                 "api_error",
-                code="pipeline_error",
+                code="pooler_unstable",
                 response_id=response_id  # CRITICAL: Include response_id for continuity
             )
         

@@ -88,6 +88,8 @@ test_results
 /piptest
 /tenv
 
+.mcp.json
+
 # Cython debug symbols
 cython_debug/
 /ignored
