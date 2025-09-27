@@ -330,20 +330,35 @@ class PostgresCheckpointerWrapper:
         
         self._initialize_connection()
         
-        # Setup checkpointer tables with better error handling
+        # Setup checkpointer tables with transaction isolation for poolers
         try:
             print("🔧 Setting up checkpointer tables...")
-            self._checkpointer.setup()
-            print("✅ Checkpointer setup completed")
+            if self.is_pooled:
+                # Use separate autocommit connection for setup to avoid transaction blocks
+                setup_kwargs = self.connect_kwargs.copy()
+                setup_kwargs['autocommit'] = True
+                
+                with psycopg.connect(self.connection_string, **setup_kwargs) as setup_conn:
+                    class SetupSaver(PostgresSaver):
+                        def _cursor(self, *, pipeline: bool = False):
+                            return super()._cursor(pipeline=False)
+                    
+                    setup_saver = SetupSaver(setup_conn)
+                    setup_saver.setup()
+                print("✅ Checkpointer setup completed (autocommit mode)")
+            else:
+                self._checkpointer.setup()
+                print("✅ Checkpointer setup completed (normal mode)")
         except Exception as setup_error:
             print(f"⚠️ Checkpointer setup failed: {str(setup_error)[:100]}...")
-            # Try to rollback any failed transaction
-            try:
-                if hasattr(self, '_conn') and self._conn and not self._conn.closed:
-                    self._conn.rollback()
-                    print("🔄 Rolled back failed setup transaction")
-            except Exception as rollback_error:
-                print(f"⚠️ Rollback also failed: {str(rollback_error)[:50]}...")
+            # For pooled connections, error in setup doesn't corrupt main connection
+            if not self.is_pooled:
+                try:
+                    if hasattr(self, '_conn') and self._conn and not self._conn.closed:
+                        self._conn.rollback()
+                        print("🔄 Rolled back failed setup transaction")
+                except Exception as rollback_error:
+                    print(f"⚠️ Rollback also failed: {str(rollback_error)[:50]}...")
         
         import psycopg
         # Use autocommit for table creation to avoid transaction blocks with poolers

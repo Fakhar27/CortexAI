@@ -33,27 +33,56 @@ MODELS = {
         "api_key_env": "OPENAI_API_KEY"
     },
     
-    # Google Gemini Models
-    "gemini-1.5-flash": {
+    # Google Gemini Models (Updated September 2025)
+    "gemini-2.0-flash": {
         "provider": "google",
-        "model_name": "gemini-1.5-flash",
+        "model_name": "gemini-2.0-flash-001",
         "temperature": 0.7,
         "max_tokens": 1048576,
         "api_key_env": "GOOGLE_API_KEY"
     },
-    "gemini-1.5-pro": {
+    "gemini-2.5-flash": {
         "provider": "google",
-        "model_name": "gemini-1.5-pro",
+        "model_name": "gemini-2.5-flash",
+        "temperature": 0.7,
+        "max_tokens": 1048576,
+        "api_key_env": "GOOGLE_API_KEY"
+    },
+    "gemini-2.5-pro": {
+        "provider": "google",
+        "model_name": "gemini-2.5-pro",
         "temperature": 0.7,
         "max_tokens": 2097152,
         "api_key_env": "GOOGLE_API_KEY"
     },
+    
+    # Deprecated Gemini models - backward compatibility
+    "gemini-1.5-flash": {
+        "provider": "google",
+        "model_name": "gemini-2.0-flash-001",
+        "temperature": 0.7,
+        "max_tokens": 1048576,
+        "api_key_env": "GOOGLE_API_KEY",
+        "_deprecated": True,
+        "_replacement": "gemini-2.0-flash"
+    },
+    "gemini-1.5-pro": {
+        "provider": "google",
+        "model_name": "gemini-2.5-pro",
+        "temperature": 0.7,
+        "max_tokens": 2097152,
+        "api_key_env": "GOOGLE_API_KEY",
+        "_deprecated": True,
+        "_replacement": "gemini-2.5-pro"
+    },
     "gemini-1.0-pro": {
         "provider": "google",
-        "model_name": "gemini-1.0-pro",
+        "model_name": "gemini-2.0-flash-001",
         "temperature": 0.7,
-        "max_tokens": 32768,
-        "api_key_env": "GOOGLE_API_KEY"
+        "max_tokens": 1048576,
+        "api_key_env": "GOOGLE_API_KEY",
+        "_deprecated": True,
+        "_replacement": "gemini-2.0-flash"
     },
     
     # Cohere Models (Updated September 2024)

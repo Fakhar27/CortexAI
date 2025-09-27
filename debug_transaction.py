@@ -7,7 +7,7 @@ import os
 import psycopg
 
 # Your connection string
-db_url = "postgresql://postgres.fzkfttgxsmigeeziexxc:BdnFsaQZulP5SLeu@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
+db_url = "postgresql://postgres.xkufhdahwfnwcgympiwc:sEazp5n2i2hPd22A@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres"
 
 def test_transaction_issue():
     """Test what's causing the transaction to fail"""
