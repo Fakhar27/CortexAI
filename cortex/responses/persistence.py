@@ -330,14 +330,28 @@ class PostgresCheckpointerWrapper:
         
         self._initialize_connection()
         
+        # Setup checkpointer tables with better error handling
         try:
+            print("🔧 Setting up checkpointer tables...")
             self._checkpointer.setup()
-        except Exception:
-            pass
+            print("✅ Checkpointer setup completed")
+        except Exception as setup_error:
+            print(f"⚠️ Checkpointer setup failed: {str(setup_error)[:100]}...")
+            # Try to rollback any failed transaction
+            try:
+                if hasattr(self, '_conn') and self._conn and not self._conn.closed:
+                    self._conn.rollback()
+                    print("🔄 Rolled back failed setup transaction")
+            except Exception as rollback_error:
+                print(f"⚠️ Rollback also failed: {str(rollback_error)[:50]}...")
         
         import psycopg
+        # Use autocommit for table creation to avoid transaction blocks with poolers
+        table_kwargs = self.connect_kwargs.copy()
+        table_kwargs['autocommit'] = True
+        
         try:
-            with psycopg.connect(connection_string, **self.connect_kwargs) as temp_conn:
+            with psycopg.connect(connection_string, **table_kwargs) as temp_conn:
                 with temp_conn.cursor() as cursor:
                     cursor.execute("""
                         CREATE TABLE IF NOT EXISTS response_tracking (
@@ -347,10 +361,11 @@ class PostgresCheckpointerWrapper:
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                         )
                     """)
-                temp_conn.commit()
+                    # No commit needed with autocommit=True
         except Exception as e:
-            # Table might already exist or we don't have permissions
-            print(f"⚠️ Could not create response_tracking table: {str(e)[:100]}")
+            # Table might already exist or we don't have permissions - that's fine
+            print(f"⚠️ Could not create response_tracking table: {str(e)[:100]}...")
+            print("   This is usually fine if table already exists")
     
     def _initialize_connection(self):
         """Initialize or reinitialize the database connection"""
