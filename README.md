@@ -1,6 +1,14 @@
 # Cortex - OpenAI Responses API Alternative
 
-**🚨 Beta Status**: Cortex is currently in beta. While functional, it may have glitches and is actively being developed.
+**🚀 Production Ready**: Cortex has evolved from beta with critical stability improvements and is now production-ready for serverless deployments.
+
+**📅 Latest Updates (December 2024):**
+- ✅ Fixed PostgreSQL pooler compatibility issues (Supabase, pgBouncer)
+- ✅ Resolved GSSAPI authentication errors in Lambda
+- ✅ Added automatic transaction recovery for fresh databases
+- ✅ Updated to latest Gemini models (2.0-flash, 2.5-flash)
+- ✅ Enhanced pipeline error handling with graceful recovery
+- ✅ Production Docker images available on [Docker Hub](https://hub.docker.com/repository/docker/reaper27/cortex-api/general)
 
 Cortex is a powerful Python framework that replicates OpenAI's Responses API functionality with multi-provider LLM support, advanced conversation persistence, and both local and serverless deployment capabilities.
 
@@ -18,29 +26,41 @@ Cortex is a powerful Python framework that replicates OpenAI's Responses API fun
 ### Current Limitations
 - **No Streaming**: Responses are returned as complete messages only
 - **No Tool Calling**: Function/tool calling not yet implemented
-- **Beta Stability**: May have occasional glitches, especially with pooler connections
+- **Beta Stability**: Production-ready but actively evolving
+  - Connection pooler issues are automatically handled with retry logic
+  - Pipeline mode errors include graceful recovery
+  - All critical issues from initial beta have been resolved
 
 ## Architecture
 
 Cortex uses a sophisticated checkpointing system for conversation persistence:
 
-- **persistence.py**: Advanced connection pooler detection with threading locks for concurrent access
+- **persistence.py**: Advanced connection pooler detection with automatic fallback handling
+  - Automatic detection of Supabase and other pooled connections
+  - GSSAPI authentication disabled for Lambda compatibility
+  - Autocommit mode for DDL operations with pooled connections
+  - Graceful pipeline error recovery with user-friendly messages
 - **create.py**: Handles initial conversation state and instructions persistence following OpenAI spec  
+  - Enhanced pipeline error detection and retry logic
+  - Transaction rollback handling for failed operations
 - **api.py**: Core orchestration with error handling and LLM invocation
-- **models/registry.py**: Multi-provider model configurations and deprecation management
+- **models/registry.py**: Multi-provider model configurations with latest model updates
 
-The system automatically detects connection poolers (like Supabase) and applies appropriate threading locks to prevent pipeline mode conflicts.
+The system automatically detects connection poolers (like Supabase) and applies appropriate connection handling to prevent pipeline mode conflicts and transaction blocking issues.
 
 ## Supported Models
 
 ### OpenAI
 - `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`, `gpt-3.5-turbo`
 
-### Google Gemini  
-- `gemini-1.5-flash`, `gemini-1.5-pro`, `gemini-1.0-pro`
+### Google Gemini (Updated December 2024)
+- `gemini-2.0-flash` - Latest flash model with improved performance
+- `gemini-2.5-flash` - Newest generation flash model  
+- `gemini-1.5-pro` - Pro model for complex tasks
 
-### Cohere
-- `command-r`, `command-r-plus`, `command`
+### Cohere (Updated December 2024)
+- `command-r` - Efficient RAG-optimized model
+- `command-r-plus` - Enhanced version with better performance
 
 
 ## Database Support
@@ -51,22 +71,30 @@ The system automatically detects connection poolers (like Supabase) and applies 
 
 ## Installation & Deployment
 
-### 🐳 Docker Hub (Recommended)
+### 🐳 Docker Hub (Recommended - Instant Deployment!)
 
-**Pre-built images available on Docker Hub for instant deployment:**
+**✨ Pre-built production images available on Docker Hub - No build required!**
 
-🔗 **Docker Hub Repository**: https://hub.docker.com/repository/docker/reaper27/cortex-api
+🔗 **Docker Hub Repository**: [**reaper27/cortex-api**](https://hub.docker.com/repository/docker/reaper27/cortex-api/general)
 
 ```bash
-# Pull from Docker Hub (317MB compressed)
+# Pull the latest production-ready image (317MB compressed)
 docker pull reaper27/cortex-api:latest
 
-# Run locally
+# Run locally with your API keys
 docker run -p 8080:8080 \
   -e CO_API_KEY="your-cohere-key" \
+  -e OPENAI_API_KEY="your-openai-key" \
+  -e GOOGLE_API_KEY="your-google-key" \
   -e DATABASE_URL="postgresql://..." \
   reaper27/cortex-api:latest
 ```
+
+**Why Docker Hub?**
+- ✅ Pre-built and tested images
+- ✅ Instant deployment without building
+- ✅ Optimized for production use
+- ✅ Regular updates with latest fixes
 
 ### ☁️ AWS ECR
 
@@ -82,13 +110,61 @@ docker run -p 8080:8080 \
 
 ### 📦 Local Development
 ```bash
+# Install with correct psycopg package
+pip install psycopg[binary]==3.2.9  # Important: Use psycopg[binary], not psycopg-binary
 pip install cortex
 ```
 
-### 🔨 Build Locally
+### 🔨 Build & Push to Docker Hub
+
+**Build the production image:**
 ```bash
-docker build -f Dockerfile.lambda.full -t cortex .
-docker run -p 8080:8080 cortex
+# Build optimized Lambda-compatible image
+# IMPORTANT: Use --platform linux/amd64 and --provenance=false for Lambda compatibility
+docker build --platform linux/amd64 --provenance=false -f Dockerfile.lambda.full -t cortex-api .
+
+# Test locally first
+docker run -p 8080:8080 \
+  -e CO_API_KEY="your-key" \
+  cortex-api
+```
+
+**Push to Docker Hub:**
+```bash
+# Login to Docker Hub
+docker login
+
+# Tag for Docker Hub (replace 'yourusername' with your Docker Hub username)
+docker tag cortex-api:latest yourusername/cortex-api:latest
+
+# Push to Docker Hub
+docker push yourusername/cortex-api:latest
+
+# Your image is now available at:
+# docker pull yourusername/cortex-api:latest
+```
+
+### 🔨 Build & Push to AWS ECR
+
+**Setup ECR repository:**
+```bash
+# Create ECR repository
+aws ecr create-repository --repository-name cortex-api --region us-east-1
+
+# Get login token
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin [account-id].dkr.ecr.us-east-1.amazonaws.com
+```
+
+**Build and push:**
+```bash
+# Build the image with Lambda-compatible architecture
+docker build --platform linux/amd64 --provenance=false -f Dockerfile.lambda.full -t cortex-api .
+
+# Tag for ECR
+docker tag cortex-api:latest [account-id].dkr.ecr.us-east-1.amazonaws.com/cortex-api:latest
+
+# Push to ECR
+docker push [account-id].dkr.ecr.us-east-1.amazonaws.com/cortex-api:latest
 ```
 
 ## Usage
@@ -193,16 +269,28 @@ python app.py
 
 ### ☁️ Serverless Deployment (AWS Lambda)
 
-#### Option 1: Use Docker Hub Image (Fastest)
+#### Option 1: Use Docker Hub Image (Fastest - Recommended!)
 ```bash
-# Deploy using pre-built image from Docker Hub
+# First, pull and tag the image for Lambda
+docker pull reaper27/cortex-api:latest
+docker tag reaper27/cortex-api:latest [account-id].dkr.ecr.[region].amazonaws.com/cortex:latest
+
+# Push to your ECR
+aws ecr get-login-password --region [region] | docker login --username AWS --password-stdin [account-id].dkr.ecr.[region].amazonaws.com
+docker push [account-id].dkr.ecr.[region].amazonaws.com/cortex:latest
+
+# Deploy Lambda function
 aws lambda create-function \
   --function-name cortex-api \
-  --code ImageUri=reaper27/cortex-api:latest \
+  --code ImageUri=[account-id].dkr.ecr.[region].amazonaws.com/cortex:latest \
   --role arn:aws:iam::account:role/lambda-role \
   --package-type Image \
+  --memory-size 512 \
+  --timeout 30 \
   --environment Variables='{
-    "CO_API_KEY":"your-key",
+    "CO_API_KEY":"your-cohere-key",
+    "OPENAI_API_KEY":"your-openai-key",
+    "GOOGLE_API_KEY":"your-google-key",
     "DATABASE_URL":"postgresql://..."
   }'
 ```
@@ -231,8 +319,10 @@ CMD ["lambda_handler.lambda_handler"]
 
 **Step 2: Build and push**
 ```bash
-# Build image
-docker build -f Dockerfile.lambda.full -t cortex-lambda .
+# Build image with correct architecture flags
+# --platform linux/amd64: Ensures Lambda-compatible architecture
+# --provenance=false: Prevents attestation issues with Lambda
+docker build --platform linux/amd64 --provenance=false -f Dockerfile.lambda.full -t cortex-lambda .
 
 # Tag for ECR
 docker tag cortex-lambda:latest 123456789012.dkr.ecr.region.amazonaws.com/cortex:latest
@@ -325,10 +415,11 @@ docker run -d \
 
 **Image Details:**
 - 🏷️ **Tag**: `reaper27/cortex-api:latest`
-- 📏 **Size**: 317MB compressed
-- 🏗️ **Architecture**: linux/amd64
-- ⏰ **Last Updated**: Updated regularly
-- 📋 **Digest**: `sha256:be1c7159c7f5a054c57161cc8b6f80a5dce6e9a4eba76edc3c42a1dc1db37e18`
+- 📏 **Size**: 317MB compressed (optimized multi-stage build)
+- 🏗️ **Architecture**: linux/amd64 (Lambda-compatible)
+- ⏰ **Last Updated**: December 2024
+- ✅ **Includes**: All recent fixes for pooler compatibility, GSSAPI, and model updates
+- 🔧 **Base**: AWS Lambda Python 3.11 runtime
 
 ## Environment Variables
 
@@ -358,6 +449,77 @@ Cortex returns OpenAI-compatible response format:
   }
 }
 ```
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### 1. "Connection pooler temporarily unstable" Error
+**Problem**: Getting pipeline mode errors with Supabase or other pooled connections  
+**Solution**: The system will automatically retry. If persistent:
+- Cortex automatically detects and handles pooler instability
+- Error messages include the response_id to maintain conversation continuity
+- Simply retry the request - the system handles recovery gracefully
+
+#### 2. GSSAPI Authentication Errors in Lambda
+**Problem**: `'PGconn' object has no attribute 'used_gssapi'` error  
+**Solution**: 
+- Ensure you're using `psycopg[binary]==3.2.9` NOT `psycopg-binary`
+- The system automatically disables GSSAPI for Lambda compatibility
+- Rebuild your Docker image with the correct package
+
+#### 3. "Current transaction is aborted" on Fresh Databases
+**Problem**: First request to a new database fails with transaction errors  
+**Solution**:
+- Cortex handles this automatically with autocommit for setup operations
+- The system creates necessary tables and checkpoints on first use
+- Retry the request if you encounter this error
+
+#### 4. Model Not Found (404) Errors
+**Problem**: Gemini or Cohere models returning 404 errors  
+**Solution**:
+- Check the supported models list above for current model names
+- Google deprecated `gemini-1.5-flash`, use `gemini-2.0-flash` instead
+- Some Cohere models have been deprecated - use `command-r` or `command-r-plus`
+
+#### 5. Lambda Deployment Issues
+**Problem**: Lambda function fails to start or crashes  
+**Solution**:
+```bash
+# Ensure PostgreSQL libraries are included
+# The Dockerfile.lambda.full already includes:
+RUN yum install -y postgresql-libs && yum clean all
+
+# Verify correct package in requirements-lambda.txt:
+psycopg[binary]==3.2.9  # NOT psycopg-binary
+```
+
+#### 6. Connection Pooler Detection
+**Problem**: Not sure if Cortex is detecting your pooled connection  
+**Solution**:
+- Cortex automatically detects Supabase and pgBouncer connections
+- Check logs for "Pooled connection detected" message
+- The system applies appropriate handling automatically
+
+### Quick Fixes Checklist
+
+✅ **For Fresh Deployments:**
+1. Use the Docker Hub image: `reaper27/cortex-api:latest`
+2. Set all required environment variables
+3. Ensure DATABASE_URL uses the pooler port (6543 for Supabase)
+4. First request may need a retry due to table creation
+
+✅ **For Lambda Issues:**
+1. Use `Dockerfile.lambda.full` for building
+2. Build with `--platform linux/amd64 --provenance=false` flags
+3. Verify `psycopg[binary]` package (not `psycopg-binary`)
+4. Check Lambda has sufficient memory (512MB minimum)
+5. Ensure timeout is set to at least 30 seconds
+
+✅ **For Model Issues:**
+1. Use the latest model names from the supported list
+2. Ensure API keys are correctly set for each provider
+3. Check provider service status if errors persist
 
 ## Contributing
 
