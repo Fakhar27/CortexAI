@@ -53,14 +53,14 @@ The system automatically detects connection poolers (like Supabase) and applies 
 ### OpenAI
 - `gpt-4o`, `gpt-4o-mini`, `gpt-4-turbo`, `gpt-3.5-turbo`
 
-### Google Gemini (Updated December 2024)
+### Google Gemini (Updated October 2025)
 - `gemini-2.0-flash` - Latest flash model with improved performance
 - `gemini-2.5-flash` - Newest generation flash model  
 - `gemini-1.5-pro` - Pro model for complex tasks
 
-### Cohere (Updated December 2024)
-- `command-r` - Efficient RAG-optimized model
-- `command-r-plus` - Enhanced version with better performance
+### Cohere (Updated October 2025)
+- `command-r-08-2024` - Efficient RAG-optimized model
+- `command-r-plus-08-2024` - Enhanced version with better performance
 
 
 ## Database Support
