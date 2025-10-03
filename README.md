@@ -2,7 +2,7 @@
 
 **🚀 Production Ready**: Cortex has evolved from beta with critical stability improvements and is now production-ready for serverless deployments.
 
-**📅 Latest Updates (December 2024):**
+**📅 Latest Updates (October 2025):**
 - ✅ Fixed PostgreSQL pooler compatibility issues (Supabase, pgBouncer)
 - ✅ Resolved GSSAPI authentication errors in Lambda
 - ✅ Added automatic transaction recovery for fresh databases
