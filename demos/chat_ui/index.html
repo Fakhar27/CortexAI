@@ -190,7 +190,7 @@
         <!-- Input Area -->
         <div class="border-t border-gray-200 dark:border-gray-700 p-4 sm:p-6 bg-white dark:bg-[#0F1522]">
             <div class="max-w-3xl mx-auto">
-                <div class="grid grid-cols-[1fr_auto] gap-3 items-end">
+                <div class="grid grid-cols-[1fr_auto_auto] gap-3 items-end">
                     <textarea 
                         id="messageInput" 
                         class="px-6 py-4 border-2 border-gray-200 dark:border-white/10 rounded-full text-base resize-none min-h-12 max-h-32 transition-colors focus:outline-none focus:border-primary bg-white dark:bg-[#0B0F17] text-gray-800 dark:text-gray-200" 
@@ -202,6 +202,13 @@
                         class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center text-xl transition-colors hover:bg-primary-dark disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md" 
                         onclick="sendMessage()">
                         ➤
+                    </button>
+                    <button 
+                        id="stopBtn"
+                        title="Stop streaming"
+                        class="w-12 h-12 bg-red-500 text-white rounded-full flex items-center justify-center text-xl transition-colors hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md hidden"
+                        onclick="stopStreaming()">
+                        ■
                     </button>
                     <div class="col-start-1 mt-2 text-xs text-gray-500 text-center justify-self-center w-full">
                         <span id="statusText">Ready</span> • Enter to send • Alt+Enter for new line
@@ -254,7 +261,7 @@
 
             <div class="mb-6 flex items-center gap-3">
                 <input type="checkbox" id="useStreaming" class="h-4 w-4" checked>
-                <label for="useStreaming" class="font-semibold text-gray-800 dark:text-gray-200">Enable Streaming (SSE)</label>
+                <label for="useStreaming" class="font-semibold text-gray-800 dark:text-gray-200" title="Streaming returns words as they are generated (faster feedback). Turn off for full responses only.">Enable Streaming (SSE)</label>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
@@ -296,6 +303,8 @@
     <script>
         let conversationId = null;
         let isTyping = false;
+        let isStreaming = false;
+        let currentController = null;
         let currentConversations = [];
 
         // Initialize
@@ -601,10 +610,18 @@
         async function sendMessageStreaming(serverUrl, payload) {
             try {
                 startAssistantStreamMessage();
+                // Abort any existing stream first
+                if (currentController) {
+                    try { currentController.abort(); } catch {}
+                }
+                currentController = new AbortController();
+                isStreaming = true;
+                setTyping(true);
                 const response = await fetch(`${serverUrl}/chat/stream`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(payload),
+                    signal: currentController.signal
                 });
 
                 if (!response.ok || !response.body) {
@@ -616,7 +633,7 @@
                 let buffer = '';
                 let done = false;
                 let finalUsage = null;
-
+                
                 while (!done) {
                     const { value, done: readerDone } = await reader.read();
                     done = readerDone;
@@ -650,6 +667,11 @@
                                         finalUsage = meta.usage || finalUsage;
                                     }
                                 } catch {}
+                            } else if (eventName === 'error') {
+                                try {
+                                    const err = JSON.parse(dataLine);
+                                    appendAssistantStreamText(`\n[stream error: ${err.message || 'unknown'}]`);
+                                } catch {}
                             }
                         }
                     }
@@ -664,6 +686,15 @@
                 endAssistantStreamMessage();
                 addMessage(`Streaming error: ${error.message}`, 'assistant');
                 setStatus('Error', 'error');
+            } finally {
+                isStreaming = false;
+                currentController = null;
+            }
+        }
+
+        function stopStreaming() {
+            if (currentController) {
+                try { currentController.abort(); } catch {}
             }
         }
 
@@ -700,16 +731,19 @@
         function setTyping(typing) {
             isTyping = typing;
             const sendBtn = document.getElementById('sendBtn');
+            const stopBtn = document.getElementById('stopBtn');
             const statusText = document.getElementById('statusText');
             
             if (typing) {
                 sendBtn.disabled = true;
                 sendBtn.innerHTML = '<div class="loading"></div>';
-                statusText.textContent = 'Sending...';
+                statusText.textContent = isStreaming ? 'Streaming...' : 'Sending...';
+                stopBtn.classList.toggle('hidden', !isStreaming);
             } else {
                 sendBtn.disabled = false;
                 sendBtn.innerHTML = '➤';
                 statusText.textContent = 'Ready';
+                stopBtn.classList.add('hidden');
             }
         }
 
