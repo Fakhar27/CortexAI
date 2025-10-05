@@ -213,6 +213,30 @@ response2 = api.create(
 - **temperature**: LLM temperature 0.0-2.0 (float, default: 0.7)
 - **metadata**: Additional metadata to store (dict)
 
+## Streaming (SSE)
+
+The core server exposes a streaming endpoint that returns Server‑Sent Events (SSE):
+
+- Endpoint: `POST /chat/stream`
+- Events:
+  - `start` — basic metadata `{ response_id, conversation_id, model }`
+  - `delta` — incremental text chunks `{ text }`
+  - `end` — summary `{ response_id, conversation_id, model, usage }`
+
+Quick test with curl (smoke test):
+```bash
+curl -N -s \
+  -H 'Content-Type: application/json' \
+  -X POST \
+  -d '{"message":"Hello, stream!","model":"gpt-4o-mini"}' \
+  http://localhost:8000/chat/stream | sed -n '1,40p'
+```
+
+Notes
+- The non‑streaming endpoint `POST /chat` remains unchanged.
+- The demo Chat UI and CLI both support streaming (enabled by default) and fall back to non‑streaming if disabled.
+- For local demo, run the thin server wrapper which mounts the core ASGI app: `python scripts/example_web_server.py`.
+
 ## Best Practices
 
 ### Do's
