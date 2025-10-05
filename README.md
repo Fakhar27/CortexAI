@@ -468,21 +468,35 @@ Set API keys for the providers you want to use:
 
 ## Response Format
 
-Cortex returns OpenAI-compatible response format:
+Cortex returns an OpenAI Responses–style object. The assistant text is available under `output[0].content[0].text`:
 ```json
 {
-  "id": "response_abc123",
+  "id": "resp_abc123",
   "object": "response",
-  "created": 1699000000,
+  "created_at": 1699000000,
+  "status": "completed",
   "model": "gpt-4o",
-  "message": {
-    "role": "assistant", 
-    "content": "Response content here..."
-  },
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_123",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Response content here...",
+          "annotations": []
+        }
+      ]
+    }
+  ],
   "usage": {
-    "total_tokens": 150,
-    "completion_tokens": 100,
-    "prompt_tokens": 50
+    "input_tokens": 50,
+    "input_tokens_details": { "cached_tokens": 0 },
+    "output_tokens": 100,
+    "output_tokens_details": { "reasoning_tokens": 0 },
+    "total_tokens": 150
   }
 }
 ```
