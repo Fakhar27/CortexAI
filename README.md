@@ -185,7 +185,7 @@ response = api.create(
     temperature=0.7
 )
 
-print(response["message"]["content"])
+print(response["output"][0]["content"][0]["text"])  # OpenAI Responses-style output
 ```
 
 ### Continue Conversation
@@ -296,7 +296,7 @@ response = api.create(
     instructions="You are a helpful assistant"
 )
 
-print(response["message"]["content"])
+print(response["output"][0]["content"][0]["text"])  # OpenAI Responses-style output
 ```
 
 **Step 4: Run**
