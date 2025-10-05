@@ -227,9 +227,37 @@ response2 = api.create(
 - Don't rely on tool calling functionality yet
 - Don't ignore database connection errors
 
+## 🛠️ Quick Start Scripts
+
+For local development, we've included helpful scripts in the `scripts/` folder:
+
+```bash
+# Automated setup (recommended)
+./scripts/setup_local.sh
+
+# Interactive API key setup
+./scripts/setup_api_keys.sh
+
+# Test your setup
+python scripts/example_local.py
+
+# Start web server
+python scripts/example_web_server.py
+```
+
+📚 **See [scripts/README.md](scripts/README.md) for complete script documentation**
+
 ## Deployment Guide
 
 ### 🏠 Local Development
+
+**Option 1: Use Setup Scripts (Recommended)**
+```bash
+# Complete automated setup
+./scripts/setup_local.sh
+```
+
+**Option 2: Manual Setup**
 
 **Step 1: Install Cortex**
 ```bash
