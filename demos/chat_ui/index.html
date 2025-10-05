@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CortexAI Chat Interface</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif']
+                    },
+                    screens: {
+                        'xs': '475px',
+                    },
+                    colors: {
+                        // Material 3 inspired palette
+                        primary: '#6750A4',
+                        'primary-dark': '#4F378B',
+                        'primary-light': '#7F67BE',
+                        surface: '#FFFFFF',
+                        'surface-variant': '#E7E0EC',
+                        'on-surface': '#1C1B1F',
+                        outline: '#79747E',
+                        // Sidebar (dark)
+                        'sidebar-bg': '#12151C',
+                        'sidebar-hover': '#0f172a'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar styles */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+            border-radius: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* Sidebar specific scrollbar (dark theme) */
+        .sidebar-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .sidebar-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+        }
+        .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* Loading spinner */
+        .loading::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e1e5e9;
+            border-top: 2px solid #6750A4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Conversation item hover effect */
+        .conversation-item {
+            transition: all 0.2s ease;
+        }
+        .conversation-item:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .conversation-item.active {
+            background-color: rgba(102,126,234,0.3);
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-100 dark:bg-[#0B0F17] h-screen flex overflow-hidden relative">
+    <!-- Sidebar Backdrop (for mobile) -->
+    <div id="sidebarBackdrop" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden" onclick="toggleSidebar()"></div>
+    
+    <!-- Sidebar -->
+    <div id="sidebar" class="fixed lg:relative w-64 bg-sidebar-bg text-white flex flex-col transition-all duration-300 h-full z-50 -translate-x-full lg:translate-x-0">
+        <!-- Sidebar Header -->
+        <div class="p-4 border-b border-gray-700">
+            <button 
+                onclick="startNewConversation()" 
+                class="w-full bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 transition-colors">
+                <span class="text-xl">+</span>
+                <span>New Chat</span>
+            </button>
+        </div>
+        
+        <!-- Conversation History -->
+        <div class="flex-1 overflow-y-auto sidebar-scrollbar p-2" id="conversationList">
+            <div class="text-gray-400 text-sm p-4 text-center">
+                Loading conversations...
+            </div>
+        </div>
+        
+        <!-- Sidebar Footer (Settings) -->
+        <div class="border-t border-gray-700 p-3">
+            <button 
+                onclick="openSettings()" 
+                class="w-full text-left px-3 py-2 rounded-lg hover:bg-sidebar-hover flex items-center gap-2 text-sm transition-colors">
+                <span>⚙️</span>
+                <span>Settings</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Chat Area -->
+    <div class="flex-1 flex flex-col bg-white dark:bg-[#0F1522]">
+        <!-- Top Bar -->
+        <div class="sticky top-0 z-50 bg-white/95 dark:bg-[#0F1522]/95 backdrop-blur-sm px-4 sm:px-8 py-3 border-b border-gray-200 dark:border-white/10 flex flex-col xs:flex-row xs:justify-between xs:items-center gap-2 shadow-md">
+            <div class="flex items-center gap-3 w-full xs:w-auto">
+                <button 
+                    onclick="toggleSidebar()" 
+                    class="lg:hidden text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white text-2xl">
+                    ☰
+                </button>
+                <div class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-primary-dark grid place-items-center text-white shadow-md">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2l1.76 5.42h5.7l-4.6 3.35 1.76 5.42L12 12.84 6.38 16.2l1.76-5.42-4.6-3.35h5.7L12 2z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <h1 class="text-gray-800 dark:text-white text-lg sm:text-2xl font-semibold">CortexAI</h1>
+            </div>
+            <div class="flex items-center gap-2 w-full xs:w-auto">
+                <select 
+                    id="model" 
+                    class="w-full xs:w-auto px-4 py-2 border-2 border-gray-200 dark:border-white/10 rounded-lg bg-white dark:bg-[#0B0F17] text-sm text-gray-800 dark:text-gray-200 cursor-pointer transition-colors focus:outline-none focus:border-primary">
+                    <option value="gpt-4o-mini">gpt-4o-mini (OpenAI)</option>
+                    <option value="gpt-4o">gpt-4o (OpenAI)</option>
+                    <option value="gpt-4-turbo">gpt-4-turbo (OpenAI)</option>
+                    <option value="gpt-3.5-turbo">gpt-3.5-turbo (OpenAI)</option>
+                    <option value="gemini-2.0-flash">gemini-2.0-flash (Google)</option>
+                    <option value="gemini-2.5-flash">gemini-2.5-flash (Google)</option>
+                    <option value="gemini-1.5-pro">gemini-1.5-pro (Google)</option>
+                    <option value="command-r-08-2024">command-r-08-2024 (Cohere)</option>
+                    <option value="command-r-plus-08-2024">command-r-plus-08-2024 (Cohere)</option>
+                </select>
+                <button id="themeToggle" title="Toggle dark mode" class="px-3 py-2 rounded-lg border-2 border-gray-200 dark:border-white/10 bg-white dark:bg-[#0B0F17] text-gray-700 dark:text-gray-200 hover:border-primary transition-colors">
+                </button>
+            </div>
+        </div>
+        <div class="h-0.5 w-full bg-gradient-to-r from-primary/0 via-primary/40 to-primary/0"></div>
+
+        <!-- Chat Messages -->
+        <div class="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar" id="chatMessages">
+            <div class="max-w-3xl mx-auto">
+                <div class="flex items-start gap-4 w-full">
+                    <div class="w-10 h-10 rounded-full bg-white dark:bg-[#0B0F17] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 flex items-center justify-center text-xl flex-shrink-0">
+                        <span class="sr-only">Assistant</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <rect x="5" y="7" width="14" height="10" rx="3" stroke="currentColor" stroke-width="1.5"/>
+                            <circle cx="9" cy="12" r="1" fill="currentColor"/>
+                            <circle cx="15" cy="12" r="1" fill="currentColor"/>
+                            <path d="M12 7V4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <div class="bg-white dark:bg-[#0B0F17] border border-gray-200 dark:border-white/10 p-4 rounded-2xl shadow-sm text-gray-800 dark:text-gray-200 max-w-[75%] sm:max-w-[70%]">
+                        Hello! I'm your CortexAI assistant. How can I help you today?
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="border-t border-gray-200 dark:border-gray-700 p-4 sm:p-6 bg-white dark:bg-[#0F1522]">
+            <div class="max-w-3xl mx-auto">
+                <div class="grid grid-cols-[1fr_auto] gap-3 items-end">
+                    <textarea 
+                        id="messageInput" 
+                        class="px-6 py-4 border-2 border-gray-200 dark:border-white/10 rounded-full text-base resize-none min-h-12 max-h-32 transition-colors focus:outline-none focus:border-primary bg-white dark:bg-[#0B0F17] text-gray-800 dark:text-gray-200" 
+                        placeholder="Type your message..."
+                        rows="1"
+                    ></textarea>
+                    <button 
+                        id="sendBtn" 
+                        class="w-12 h-12 bg-primary text-white rounded-full flex items-center justify-center text-xl transition-colors hover:bg-primary-dark disabled:bg-gray-400 disabled:cursor-not-allowed shadow-md" 
+                        onclick="sendMessage()">
+                        ➤
+                    </button>
+                    <div class="col-start-1 mt-2 text-xs text-gray-500 text-center justify-self-center w-full">
+                        <span id="statusText">Ready</span> • Enter to send • Alt+Enter for new line
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Status Bar -->
+        <div class="bg-gray-50 dark:bg-[#0B0F17] px-4 sm:px-8 py-2 text-xs text-gray-600 dark:text-gray-300 border-t border-gray-200 dark:border-gray-700">
+            <div class="max-w-3xl mx-auto flex flex-wrap items-center justify-center sm:justify-between gap-3 xs:gap-4">
+                <span class="inline-flex items-center gap-1.5">
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z"/></svg>
+                    <span id="conversationId">-</span>
+                </span>
+                <span class="inline-flex items-center gap-1.5">
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l4 4h-3v7h-2V6H8l4-4z"/></svg>
+                    <span id="currentModel">gpt-4o-mini</span>
+                </span>
+                <span class="hidden xs:inline-flex items-center gap-1.5">
+                    <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 17h4v-7H3v7zm7 0h4V4h-4v13zm7 0h4V9h-4v8z"/></svg>
+                    <span id="tokenCount">-</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity duration-200">
+        <div class="bg-white dark:bg-[#0B0F17] p-6 md:p-8 rounded-xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto transform transition-all duration-200 opacity-0 scale-95 border border-gray-200 dark:border-white/10">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-gray-800 dark:text-white text-2xl font-semibold">Settings</h2>
+                <button class="text-gray-400 dark:text-gray-300 text-3xl font-bold hover:text-gray-800 dark:hover:text-white" onclick="closeSettings()">&times;</button>
+            </div>
+
+            <div class="mb-6">
+                <label for="serverUrl" class="block mb-2 font-semibold text-gray-800 dark:text-gray-200">Server URL:</label>
+                <input type="text" id="serverUrl" value="http://localhost:8000" placeholder="http://localhost:8000" class="w-full p-3 border-2 border-gray-200 dark:border-white/10 rounded-lg text-base transition-colors focus:outline-none focus:border-primary bg-white dark:bg-[#0B0F17] text-gray-800 dark:text-gray-200">
+            </div>
+
+            <div class="mb-6">
+                <label for="systemPrompt" class="block mb-2 font-semibold text-gray-800 dark:text-gray-200">System Prompt (optional):</label>
+                <input type="text" id="systemPrompt" placeholder="You are a helpful assistant..." class="w-full p-3 border-2 border-gray-200 dark:border-white/10 rounded-lg text-base transition-colors focus:outline-none focus:border-primary bg-white dark:bg-[#0B0F17] text-gray-800 dark:text-gray-200">
+            </div>
+
+            <div class="mb-6">
+                <label for="temperature" class="block mb-2 font-semibold text-gray-800 dark:text-gray-200">Temperature (0.0 - 2.0):</label>
+                <input type="number" id="temperature" value="0.7" min="0" max="2" step="0.1" class="w-full p-3 border-2 border-gray-200 dark:border-white/10 rounded-lg text-base transition-colors focus:outline-none focus:border-primary bg-white dark:bg-[#0B0F17] text-gray-800 dark:text-gray-200">
+            </div>
+
+            <div class="mb-6 flex items-center gap-3">
+                <input type="checkbox" id="useStreaming" class="h-4 w-4" checked>
+                <label for="useStreaming" class="font-semibold text-gray-800 dark:text-gray-200">Enable Streaming (SSE)</label>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+                <button class="w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-[#0B0F17] text-gray-800 dark:text-gray-200 hover:border-primary hover:bg-primary/5 shadow-sm" onclick="checkHealth()">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13 2v2h-2V2h2zm9 11h-2v-2h2v2zM4 13H2v-2h2v2zm1.64-7.36l1.41 1.41L5.46 8.34 4.05 6.93l1.59-1.29zM20 4.05l-1.41 1.41-1.59-1.29 1.41-1.41L20 4.05zM12 6a6 6 0 100 12 6 6 0 000-12z"/></svg>
+                    Check Health
+                </button>
+                <button class="w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg border border-gray-300 dark:border-white/10 bg-white dark:bg-[#0B0F17] text-gray-800 dark:text-gray-200 hover:border-primary hover:bg-primary/5 shadow-sm" onclick="loadModels()">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z"/></svg>
+                    Load Models
+                </button>
+                <button class="w-full inline-flex items-center justify-center gap-2 py-3 rounded-lg bg-primary text-white hover:bg-primary-dark shadow" onclick="closeSettings()">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M5 5h14v2H5V5zm0 6h14v2H5v-2zm0 6h14v2H5v-2z"/></svg>
+                    Save & Close
+                </button>
+            </div>
+
+            <div id="settingsResponse"></div>
+            <div id="modelsInfo"></div>
+        </div>
+    </div>
+
+    <!-- Models Modal -->
+    <div id="modelsModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-md flex items-center justify-center p-4 transition-opacity duration-200">
+        <div class="bg-white dark:bg-[#0B0F17] rounded-2xl w-full max-w-4xl max-h-[90vh] shadow-2xl overflow-hidden transform transition-all duration-200 opacity-0 scale-95 border border-gray-200 dark:border-white/10">
+            <div class="p-6 border-b border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#0F1522] flex justify-between items-center">
+                <h2 class="text-gray-800 dark:text-white text-2xl font-semibold m-0 flex items-center gap-2">
+                    🤖 Available Models 
+                    <span class="text-sm font-normal text-gray-500">(click model for docs)</span>
+                </h2>
+                <button class="text-gray-400 dark:text-gray-300 text-3xl font-bold hover:text-gray-800 dark:hover:text-white" onclick="closeModelsModal()">&times;</button>
+            </div>
+            <div class="p-0 overflow-y-auto custom-scrollbar" id="modelsModalBody">
+                <!-- Models content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let conversationId = null;
+        let isTyping = false;
+        let currentConversations = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConversationHistory();
+            checkServerHealth();
+            
+            // Auto-resize textarea
+            document.getElementById('messageInput').addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+
+            // Send message on Enter, new line on Alt+Enter
+            document.getElementById('messageInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.altKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+
+            // Update model in status bar when changed
+            document.getElementById('model').addEventListener('change', function() {
+                document.getElementById('currentModel').textContent = this.value;
+            });
+        });
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            
+            if (sidebar.classList.contains('-translate-x-full')) {
+                sidebar.classList.remove('-translate-x-full');
+                backdrop.classList.remove('hidden');
+            } else {
+                sidebar.classList.add('-translate-x-full');
+                backdrop.classList.add('hidden');
+            }
+        }
+
+        function startNewConversation() {
+            conversationId = null;
+            document.getElementById('conversationId').textContent = '-';
+            document.getElementById('tokenCount').textContent = '-';
+            
+            // Clear chat messages
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = `
+                <div class="max-w-3xl mx-auto">
+                    <div class="flex items-start gap-4 w-full">
+                        <div class="w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-700 flex items-center justify-center text-xl flex-shrink-0" aria-hidden="true">${getBotAvatarSVG()}</div>
+                        <div class="bg-white dark:bg-[#0B0F17] border border-gray-200 dark:border-white/10 p-4 rounded-2xl shadow-sm text-gray-800 dark:text-gray-200 max-w-[75%] sm:max-w-[70%]">
+                            Hello! I'm your CortexAI assistant. How can I help you today?
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Update sidebar to remove active state
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Focus on input
+            document.getElementById('messageInput').focus();
+        }
+
+        async function loadConversationHistory() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const conversationList = document.getElementById('conversationList');
+            
+            try {
+                console.log('Loading conversations from:', `${serverUrl}/conversations`);
+                const response = await fetch(`${serverUrl}/conversations`);
+                const data = await response.json();
+                
+                console.log('Conversations response:', data);
+                
+                if (response.ok && data.conversations && data.conversations.length > 0) {
+                    currentConversations = data.conversations;
+                    conversationList.innerHTML = '';
+                    
+                    // Display conversations with server-generated titles
+                    data.conversations.forEach(conv => {
+                        const date = new Date(conv.created_at);
+                        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                        
+                        const convElement = document.createElement('div');
+                        convElement.className = 'conversation-item p-3 rounded-lg cursor-pointer mb-1';
+                        convElement.dataset.convId = conv.id;
+                        
+                        // Display server-generated title
+                        convElement.innerHTML = `
+                            <div class="text-sm font-medium text-white truncate">${conv.title || 'New conversation'}</div>
+                            <div class="text-xs text-gray-400 mt-1">${dateStr} • ${conv.message_count} messages</div>
+                        `;
+                        convElement.onclick = () => loadConversation(conv.id);
+                        conversationList.appendChild(convElement);
+                    });
+                } else if (!response.ok) {
+                    console.error('Failed to load conversations:', data);
+                    conversationList.innerHTML = `<div class="text-gray-400 text-sm p-4 text-center">Error: ${data.detail || 'Server error'}</div>`;
+                } else {
+                    conversationList.innerHTML = '<div class="text-gray-400 text-sm p-4 text-center">No conversations yet</div>';
+                }
+            } catch (error) {
+                console.error('Failed to load conversations:', error);
+                conversationList.innerHTML = '<div class="text-gray-400 text-sm p-4 text-center">Failed to load history<br><span class="text-xs">Check console for details</span></div>';
+            }
+        }
+
+        async function loadConversation(convId) {
+            const serverUrl = document.getElementById('serverUrl').value;
+            
+            // Show loading state
+            setStatus('Loading conversation...', 'info');
+            
+            try {
+                console.log('Loading conversation:', convId);
+                const response = await fetch(`${serverUrl}/conversations/${convId}`);
+                const data = await response.json();
+                
+                console.log('Conversation data:', data);
+                
+                if (response.ok && data.messages) {
+                    // Clear current chat
+                    const chatMessages = document.getElementById('chatMessages');
+                    chatMessages.innerHTML = '<div class="max-w-3xl mx-auto"></div>';
+                    const container = chatMessages.querySelector('.max-w-3xl');
+                    
+                    // Set current conversation ID
+                    conversationId = convId;
+                    document.getElementById('conversationId').textContent = convId.substring(0, 8) + '...';
+                    
+                    if (data.messages.length === 0) {
+                        // Show empty state
+                        container.innerHTML = `
+                            <div class="flex items-start gap-3 w-full">
+                                <div class="w-10 h-10 rounded-full bg-white border border-gray-200 text-gray-700 flex items-center justify-center text-xl flex-shrink-0" aria-hidden="true">${getBotAvatarSVG()}</div>
+                                <div class="bg-white dark:bg-[#0B0F17] border border-gray-200 dark:border-white/10 px-4 py-3 rounded-2xl shadow-sm text-gray-500 max-w-[75%] sm:max-w-[70%]">
+                                    This conversation doesn't have any messages yet, or the messages couldn't be loaded.
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Display all messages
+                        data.messages.forEach(msg => {
+                            const isUser = msg.role === 'human';
+                        const avatar = isUser ? getUserAvatarSVG() : getBotAvatarSVG();
+                            const alignment = isUser ? 'flex-row-reverse' : '';
+                            const bgColor = isUser ? 'bg-primary text-white' : 'bg-white dark:bg-[#0B0F17] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200';
+                            const avatarBg = isUser ? 'bg-primary text-white' : 'bg-white dark:bg-[#0B0F17] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200';
+                            
+                            const messageDiv = document.createElement('div');
+                            messageDiv.className = `flex items-start gap-3 mb-3 ${alignment}`;
+                            
+                            // Preserve line breaks
+                            const formattedContent = msg.content.replace(/\n/g, '<br>');
+                            messageDiv.innerHTML = `
+                                <div class="w-10 h-10 rounded-full ${avatarBg} flex items-center justify-center text-xl flex-shrink-0" aria-hidden="true">${avatar}</div>
+                                <div class="${bgColor} px-4 py-3 rounded-2xl shadow-sm break-words max-w-[75%] sm:max-w-[70%]">${formattedContent}</div>
+                            `;
+                            container.appendChild(messageDiv);
+                        });
+                    }
+                    
+                    // Scroll to bottom
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    
+                    // Update active state in sidebar
+                    document.querySelectorAll('.conversation-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    document.querySelector(`[data-conv-id="${convId}"]`)?.classList.add('active');
+                    
+                    // Close sidebar on mobile after selecting conversation
+                    if (window.innerWidth < 1024) {
+                        toggleSidebar();
+                    }
+                    
+                    setStatus('Ready', 'success');
+                } else {
+                    console.error('Failed to load conversation:', data);
+                    setStatus(`Error: ${data.detail || 'Failed to load'}`, 'error');
+                }
+            } catch (error) {
+                console.error('Failed to load conversation:', error);
+                setStatus('Failed to load conversation', 'error');
+            }
+        }
+
+        async function sendMessage() {
+            const message = document.getElementById('messageInput').value.trim();
+            if (!message || isTyping) return;
+
+            const model = document.getElementById('model').value;
+            const serverUrl = document.getElementById('serverUrl').value;
+            const systemPrompt = document.getElementById('systemPrompt').value;
+            const temperature = parseFloat(document.getElementById('temperature').value);
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            
+            // Clear input and disable send button
+            document.getElementById('messageInput').value = '';
+            document.getElementById('messageInput').style.height = 'auto';
+            setTyping(true);
+
+            const payload = {
+                message: message,
+                model: model,
+                temperature: temperature
+            };
+
+            if (conversationId) {
+                payload.conversation_id = conversationId;
+            }
+            if (systemPrompt) {
+                payload.system_prompt = systemPrompt;
+            }
+
+            const useStreaming = document.getElementById('useStreaming').checked;
+
+            try {
+                if (useStreaming) {
+                    await sendMessageStreaming(serverUrl, payload);
+                } else {
+                    await sendMessageSimple(serverUrl, payload);
+                }
+            } finally {
+                setTyping(false);
+            }
+        }
+
+        async function sendMessageSimple(serverUrl, payload) {
+            try {
+                const response = await fetch(`${serverUrl}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    addMessage(data.message, 'assistant');
+                    conversationId = data.conversation_id;
+                    updateStatusBar(data);
+                    setStatus('Ready', 'success');
+                    if (!currentConversations.find(c => c.id === conversationId)) {
+                        loadConversationHistory();
+                    }
+                } else {
+                    addMessage(`Error: ${data.detail || 'Unknown error'}`, 'assistant');
+                    setStatus('Error', 'error');
+                }
+            } catch (error) {
+                addMessage(`Network error: ${error.message}`, 'assistant');
+                setStatus('Offline', 'error');
+            }
+        }
+
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        let currentStreamEl = null;
+
+        function startAssistantStreamMessage() {
+            const chatMessages = document.getElementById('chatMessages');
+            let container = chatMessages.querySelector('.max-w-3xl');
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'max-w-3xl mx-auto';
+                chatMessages.appendChild(container);
+            }
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'flex items-start gap-3 mb-3';
+            messageDiv.innerHTML = `
+                <div class="w-10 h-10 rounded-full bg-white dark:bg-[#0B0F17] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200 flex items-center justify-center text-xl flex-shrink-0" aria-hidden="true">${getBotAvatarSVG()}</div>
+                <div class="bg-white dark:bg-[#0B0F17] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200 px-4 py-3 rounded-2xl shadow-sm break-words max-w-[75%] sm:max-w-[70%]"></div>
+            `;
+            container.appendChild(messageDiv);
+            currentStreamEl = messageDiv.querySelector('div:last-child');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function appendAssistantStreamText(delta) {
+            if (!currentStreamEl) return;
+            const safe = escapeHtml(delta).replace(/\n/g, '<br>');
+            currentStreamEl.innerHTML += safe;
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function endAssistantStreamMessage() {
+            currentStreamEl = null;
+        }
+
+        async function sendMessageStreaming(serverUrl, payload) {
+            try {
+                startAssistantStreamMessage();
+                const response = await fetch(`${serverUrl}/chat/stream`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok || !response.body) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+                let done = false;
+                let finalUsage = null;
+
+                while (!done) {
+                    const { value, done: readerDone } = await reader.read();
+                    done = readerDone;
+                    if (value) {
+                        buffer += decoder.decode(value, { stream: true });
+                        let parts = buffer.split(/\n\n/);
+                        buffer = parts.pop() || '';
+                        for (const part of parts) {
+                            const lines = part.split(/\n/);
+                            let eventName = null; let dataLine = '';
+                            for (const line of lines) {
+                                if (line.startsWith('event:')) eventName = line.slice(6).trim();
+                                else if (line.startsWith('data:')) dataLine += line.slice(5).trim();
+                            }
+                            if (!eventName) continue;
+                            if (eventName === 'delta') {
+                                try {
+                                    const payload = JSON.parse(dataLine);
+                                    if (payload && payload.text) appendAssistantStreamText(payload.text);
+                                } catch {}
+                            } else if (eventName === 'start') {
+                                try {
+                                    const meta = JSON.parse(dataLine);
+                                    if (meta && meta.model) document.getElementById('currentModel').textContent = meta.model;
+                                } catch {}
+                            } else if (eventName === 'end') {
+                                try {
+                                    const meta = JSON.parse(dataLine);
+                                    if (meta) {
+                                        conversationId = meta.conversation_id || conversationId;
+                                        finalUsage = meta.usage || finalUsage;
+                                    }
+                                } catch {}
+                            }
+                        }
+                    }
+                }
+                if (finalUsage) updateStatusBar({ conversation_id: conversationId, usage: finalUsage });
+                setStatus('Ready', 'success');
+                endAssistantStreamMessage();
+                if (!currentConversations.find(c => c.id === conversationId)) {
+                    loadConversationHistory();
+                }
+            } catch (error) {
+                endAssistantStreamMessage();
+                addMessage(`Streaming error: ${error.message}`, 'assistant');
+                setStatus('Error', 'error');
+            }
+        }
+
+        function addMessage(content, sender) {
+            const chatMessages = document.getElementById('chatMessages');
+            let container = chatMessages.querySelector('.max-w-3xl');
+            
+            if (!container) {
+                container = document.createElement('div');
+                container.className = 'max-w-3xl mx-auto';
+                chatMessages.appendChild(container);
+            }
+            
+            const isUser = sender === 'user';
+            const avatar = isUser ? getUserAvatarSVG() : getBotAvatarSVG();
+            const alignment = isUser ? 'flex-row-reverse' : '';
+            const bgColor = isUser ? 'bg-primary text-white' : 'bg-white dark:bg-[#0B0F17] border border-gray-200 dark:border-white/10 text-gray-800 dark:text-gray-200';
+            const avatarBg = isUser ? 'bg-primary text-white' : 'bg-white dark:bg-[#0B0F17] border border-gray-200 dark:border-white/10 text-gray-700 dark:text-gray-200';
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex items-start gap-3 mb-3 ${alignment}`;
+            
+            // Preserve line breaks by converting \n to <br> tags
+            const formattedContent = content.replace(/\n/g, '<br>');
+            messageDiv.innerHTML = `
+                <div class="w-10 h-10 rounded-full ${avatarBg} flex items-center justify-center text-xl flex-shrink-0" aria-hidden="true">${avatar}</div>
+                <div class="${bgColor} px-4 py-3 rounded-2xl shadow-sm break-words max-w-[75%] sm:max-w-[70%]">${formattedContent}</div>
+            `;
+            
+            container.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function setTyping(typing) {
+            isTyping = typing;
+            const sendBtn = document.getElementById('sendBtn');
+            const statusText = document.getElementById('statusText');
+            
+            if (typing) {
+                sendBtn.disabled = true;
+                sendBtn.innerHTML = '<div class="loading"></div>';
+                statusText.textContent = 'Sending...';
+            } else {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '➤';
+                statusText.textContent = 'Ready';
+            }
+        }
+
+        function updateStatusBar(data) {
+            const convId = data.conversation_id || '-';
+            document.getElementById('conversationId').textContent = 
+                convId === '-' ? '-' : convId.substring(0, 8) + '...';
+            document.getElementById('tokenCount').textContent = 
+                `${data.usage.total_tokens} (${data.usage.input_tokens} in, ${data.usage.output_tokens} out)`;
+        }
+
+        function setStatus(text, type) {
+            const statusText = document.getElementById('statusText');
+            statusText.textContent = text;
+            statusText.className = type === 'error' ? 'text-red-600 font-semibold' : '';
+        }
+
+        // Settings modal functions
+        function openSettings() {
+            const modal = document.getElementById('settingsModal');
+            const panel = modal.querySelector('div');
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                panel.classList.remove('opacity-0','scale-95');
+                panel.classList.add('opacity-100','scale-100');
+            });
+        }
+
+        function closeSettings() {
+            const modal = document.getElementById('settingsModal');
+            const panel = modal.querySelector('div');
+            panel.classList.add('opacity-0','scale-95');
+            panel.classList.remove('opacity-100','scale-100');
+            setTimeout(() => modal.classList.add('hidden'), 180);
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const settingsModal = document.getElementById('settingsModal');
+            const modelsModal = document.getElementById('modelsModal');
+            
+            if (event.target === settingsModal) {
+                closeSettings();
+            }
+            if (event.target === modelsModal) {
+                closeModelsModal();
+            }
+        }
+
+        async function checkHealth() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const responseDiv = document.getElementById('settingsResponse');
+            
+            responseDiv.innerHTML = '<div class="flex items-center gap-2 text-gray-600">Checking health...<div class="loading"></div></div>';
+
+            try {
+                const response = await fetch(`${serverUrl}/health`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    responseDiv.innerHTML = '<div class="mt-4 p-4 rounded-lg text-sm bg-green-100 text-green-800 border border-green-200">✅ Server is healthy!</div>';
+                    setTimeout(() => {
+                        responseDiv.innerHTML = '';
+                    }, 3000);
+                } else {
+                    responseDiv.innerHTML = '<div class="mt-4 p-4 rounded-lg text-sm bg-red-100 text-red-800 border border-red-200">❌ Server health check failed</div>';
+                }
+            } catch (error) {
+                responseDiv.innerHTML = `<div class="mt-4 p-4 rounded-lg text-sm bg-red-100 text-red-800 border border-red-200">❌ Cannot connect to server: ${error.message}</div>`;
+            }
+        }
+
+        async function loadModels() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const modelsModalBody = document.getElementById('modelsModalBody');
+            
+            // Show the modal immediately with loading state
+            const modal = document.getElementById('modelsModal');
+            const panel = modal.querySelector('div');
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                panel.classList.remove('opacity-0','scale-95');
+                panel.classList.add('opacity-100','scale-100');
+            });
+            modelsModalBody.innerHTML = '<div class="flex items-center justify-center gap-2 text-gray-600 p-8">Loading models...<div class="loading"></div></div>';
+
+            try {
+                const response = await fetch(`${serverUrl}/models`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    let modelsHtml = '';
+                    
+                    // Provider icons mapping
+                    const providerIcons = {
+                        'openai': '🔷',
+                        'google': '🟨', 
+                        'cohere': '🟪',
+                        'anthropic': '🟠'
+                    };
+                    
+                    for (const [provider, models] of Object.entries(data)) {
+                        const icon = providerIcons[provider.toLowerCase()] || '🤖';
+                        const providerName = provider.charAt(0).toUpperCase() + provider.slice(1).toLowerCase();
+                        
+                        modelsHtml += `
+                            <div class="p-6 bg-white border-b border-gray-200 last:border-b-0">
+                                <div class="flex items-center gap-2 mb-3 pb-2 border-b-2 border-gray-200">
+                                    <span class="text-xl">${icon}</span>
+                                    <span class="font-bold text-base text-gray-600">${providerName}</span>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                        `;
+                        
+                        models.forEach(model => {
+                            modelsHtml += `<div class="bg-white p-3 rounded-md border border-gray-200 text-sm text-gray-700 transition-all cursor-pointer hover:bg-gray-50 hover:border-primary hover:-translate-y-0.5 hover:shadow-lg" onclick="openModelDocumentation('${model}')" title="Click to view ${model} documentation">${model}</div>`;
+                        });
+                        
+                        modelsHtml += '</div></div>';
+                    }
+                    
+                    modelsModalBody.innerHTML = modelsHtml;
+                    
+                } else {
+                    modelsModalBody.innerHTML = '<div class="p-8 text-sm bg-red-100 text-red-800 border border-red-200">❌ Failed to load models</div>';
+                }
+            } catch (error) {
+                modelsModalBody.innerHTML = `<div class="p-8 text-sm bg-red-100 text-red-800 border border-red-200">❌ Cannot connect to server: ${error.message}</div>`;
+            }
+        }
+
+        function closeModelsModal() {
+            document.getElementById('modelsModal').classList.add('hidden');
+        }
+
+        // Dynamic provider detection from model name
+        function detectProvider(modelName) {
+            const name = modelName.toLowerCase();
+            
+            if (name.startsWith('gpt-') || name.startsWith('text-') || name.startsWith('dall-e') || name.startsWith('whisper')) {
+                return 'openai';
+            } else if (name.startsWith('gemini-') || name.startsWith('palm-') || name.startsWith('bard')) {
+                return 'google';
+            } else if (name.startsWith('command-') || name.startsWith('embed-') || name.startsWith('generate-')) {
+                return 'cohere';
+            } else if (name.startsWith('claude-') || name.startsWith('sonnet') || name.startsWith('opus') || name.startsWith('haiku')) {
+                return 'anthropic';
+            }
+            
+            return 'unknown';
+        }
+
+        // Dynamic URL building based on provider
+        function buildDocumentationUrl(modelName, provider) {
+            const cleanModelName = modelName.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+            
+            switch (provider) {
+                case 'openai':
+                    if (cleanModelName.startsWith('gpt-3.5')) {
+                        return `https://platform.openai.com/docs/models/gpt-3-5-turbo`;
+                    }
+                    return `https://platform.openai.com/docs/models/${cleanModelName}`;
+                
+                case 'google':
+                    return `https://ai.google.dev/gemini-api/docs/models/${cleanModelName}`;
+                
+                case 'cohere':
+                    return `https://docs.cohere.com/docs/models`;
+                
+                case 'anthropic':
+                    return `https://docs.anthropic.com/claude/reference/selecting-a-model`;
+                
+                default:
+                    return `https://www.google.com/search?q=${encodeURIComponent(modelName + ' AI model documentation')}`;
+            }
+        }
+
+        function openModelDocumentation(modelName) {
+            const provider = detectProvider(modelName);
+            const url = buildDocumentationUrl(modelName, provider);
+            window.open(url, '_blank', 'noopener,noreferrer');
+        }
+
+        // Initialize status bar
+        document.getElementById('currentModel').textContent = document.getElementById('model').value;
+
+        // Health check function
+        async function checkServerHealth() {
+            const serverUrl = document.getElementById('serverUrl').value;
+            const statusText = document.getElementById('statusText');
+            
+            try {
+                const response = await fetch(`${serverUrl}/health`, {
+                    method: 'GET'
+                });
+                
+                if (response.ok) {
+                    statusText.textContent = 'Ready';
+                } else {
+                    statusText.textContent = 'Server Error';
+                }
+            } catch (error) {
+                statusText.textContent = 'Offline';
+            }
+        }
+
+        // Periodic health check every 30 seconds
+        setInterval(checkServerHealth, 30000);
+
+        // Theme handling (Material You style)
+        function setThemeIcon(theme) {
+            const btn = document.getElementById('themeToggle');
+            if (!btn) return;
+            btn.innerHTML = theme === 'dark' 
+              ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M21.64 13.02A9 9 0 1111 2.36 7 7 0 0021.64 13z"/></svg>'
+              : '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor"><path d="M6.76 4.84l-1.8-1.79L3.17 4.84l1.79 1.79 1.8-1.79zM1 13h3v-2H1v2zm10 9h2v-3h-2v3zm8.83-17.16l-1.79-1.79-1.8 1.79 1.8 1.79 1.79-1.79zM20 11v2h3v-2h-3zm-8-8h2V0h-2v3zm-7.07 14.07l-1.79 1.79 1.79 1.79 1.79-1.79-1.79-1.79zM17.24 19.16l1.79 1.79 1.79-1.79-1.79-1.79-1.79 1.79z"/></svg>';
+        }
+
+        (function initTheme(){
+            const ls = localStorage.getItem('theme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = ls || (prefersDark ? 'dark' : 'light');
+            document.documentElement.classList.toggle('dark', theme === 'dark');
+            setThemeIcon(theme);
+            const btn = document.getElementById('themeToggle');
+            if (btn) {
+                btn.onclick = () => {
+                    const isDark = document.documentElement.classList.toggle('dark');
+                    const t = isDark ? 'dark' : 'light';
+                    localStorage.setItem('theme', t);
+                    setThemeIcon(t);
+                };
+            }
+        })();
+
+        // Inline SVG avatars
+        function getBotAvatarSVG() {
+            return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="7" width="14" height="10" rx="3" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><path d="M12 7V4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+        }
+        function getUserAvatarSVG() {
+            return '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" stroke="currentColor" stroke-width="1.5"/><path d="M4 20c1.5-3.5 5-6 8-6s6.5 2.5 8 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+        }
+
+        // Animate models modal open/close
+        function closeModelsModal() {
+            const modal = document.getElementById('modelsModal');
+            const panel = modal.querySelector('div');
+            panel.classList.add('opacity-0','scale-95');
+            panel.classList.remove('opacity-100','scale-100');
+            setTimeout(() => modal.classList.add('hidden'), 180);
+        }
+    </script>
+</body>
+</html>
