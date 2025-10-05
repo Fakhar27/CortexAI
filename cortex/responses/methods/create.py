@@ -318,10 +318,13 @@ def create_response(
             last_error = e
             error_message = str(e).lower()
             
-            # Check for various pipeline mode errors
+            # Check for various pipeline mode errors and connection pooler issues
+            # These errors commonly occur with Supabase, pgBouncer, and other pooled connections
             pipeline_errors = [
                 "pipeline mode", "pipeline", "failed to enter pipeline", 
-                "cannot enter pipeline", "sending query failed"
+                "cannot enter pipeline", "sending query failed",
+                "connection pooler", "pooler", "connection reset",
+                "server closed the connection", "connection lost"
             ]
             if any(err in error_message for err in pipeline_errors):
                 retry_count += 1
@@ -340,10 +343,13 @@ def create_response(
     if last_error:
         error_message = str(last_error).lower()
         
-        # Check for various pipeline mode errors
+        # Check for various pipeline mode errors and connection pooler issues
+        # These errors commonly occur with Supabase, pgBouncer, and other pooled connections
         pipeline_errors = [
             "pipeline mode", "pipeline", "failed to enter pipeline", 
-            "cannot enter pipeline", "sending query failed"
+            "cannot enter pipeline", "sending query failed",
+            "connection pooler", "pooler", "connection reset",
+            "server closed the connection", "connection lost"
         ]
         if any(err in error_message for err in pipeline_errors):
             print(f"\n⚠️ PIPELINE MODE ERROR AFTER RETRIES - PRESERVING CONTINUITY")
