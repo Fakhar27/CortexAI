@@ -77,8 +77,9 @@ How chat works
   - Details view uses GET `/conversations/{id}`.
 
 Streaming (SSE)
-- Toggle “Enable Streaming (SSE)” in Settings to stream assistant replies.
-- Requires a server that supports `/chat/stream` (use `python scripts/example_web_server.py` for the demo).
+- Streaming is enabled by default in the Chat UI Settings.
+- Toggle “Enable Streaming (SSE)” to switch between streaming and full responses.
+- Provided by the core server (`/chat/stream`). For local demo, run: `python scripts/example_web_server.py`.
 - Current implementation streams the generated message back in small chunks to provide an interactive feel; the non‑streaming `/chat` endpoint remains unchanged.
 
 Responsive behavior
