@@ -652,12 +652,20 @@
                             if (eventName === 'delta') {
                                 try {
                                     const payload = JSON.parse(dataLine);
-                                    if (payload && payload.text) appendAssistantStreamText(payload.text);
+                                    if (payload && payload.text) {
+                                        appendAssistantStreamText(payload.text);
+                                        // Incremental approx tokens: ~1 token per 4 chars
+                                        const add = Math.max(1, Math.floor(payload.text.length / 4));
+                                        if (!window.__approxOut) window.__approxOut = 0;
+                                        window.__approxOut += add;
+                                        updateStatusBar({ conversation_id: conversationId || '-', usage: { total_tokens: window.__approxOut, input_tokens: 0, output_tokens: window.__approxOut } });
+                                    }
                                 } catch {}
                             } else if (eventName === 'start') {
                                 try {
                                     const meta = JSON.parse(dataLine);
                                     if (meta && meta.model) document.getElementById('currentModel').textContent = meta.model;
+                                    window.__approxOut = 0;
                                 } catch {}
                             } else if (eventName === 'end') {
                                 try {

@@ -653,45 +653,61 @@ class CortexCLI:
                 final_usage = None
                 final_conv_id = None
                 model_name = requested_model
+                approx_out_tokens = 0
+                delta_count = 0
 
-                for raw_line in resp.iter_lines(decode_unicode=True):
-                    if raw_line is None:
-                        continue
-                    line = raw_line.strip("\r")
-                    if line == "":
-                        # End of one SSE event
-                        if event and data_buf:
-                            data_str = "\n".join(data_buf)
-                            try:
-                                payload_obj = json.loads(data_str)
-                            except Exception:
-                                payload_obj = None
+                try:
+                    for raw_line in resp.iter_lines(decode_unicode=True):
+                        if raw_line is None:
+                            continue
+                        line = raw_line.strip("\r")
+                        if line == "":
+                            # End of one SSE event
+                            if event and data_buf:
+                                data_str = "\n".join(data_buf)
+                                try:
+                                    payload_obj = json.loads(data_str)
+                                except Exception:
+                                    payload_obj = None
 
-                            if event == "start" and isinstance(payload_obj, dict):
-                                model_name = payload_obj.get("model", model_name)
-                            elif event == "delta" and isinstance(payload_obj, dict):
-                                delta = payload_obj.get("text", "")
-                                if delta:
-                                    full_text.append(delta)
-                                    sys.stdout.write(
-                                        Colors.WHITE + delta + Colors.RESET
-                                    )
-                                    sys.stdout.flush()
-                            elif event == "end" and isinstance(payload_obj, dict):
-                                final_usage = payload_obj.get("usage")
-                                final_conv_id = payload_obj.get("conversation_id")
-                                # End of stream
-                                break
+                                if event == "start" and isinstance(payload_obj, dict):
+                                    model_name = payload_obj.get("model", model_name)
+                                elif event == "delta" and isinstance(payload_obj, dict):
+                                    delta = payload_obj.get("text", "")
+                                    if delta:
+                                        full_text.append(delta)
+                                        sys.stdout.write(Colors.WHITE + delta + Colors.RESET)
+                                        sys.stdout.flush()
+                                        # Incremental approx tokens (roughly 1 per 4 chars)
+                                        approx_out_tokens += max(1, len(delta) // 4)
+                                        delta_count += 1
+                                        if delta_count % 20 == 0 and self.settings.get("show_usage", True):
+                                            sys.stdout.write(
+                                                f"\n{Colors.DIM}… tokens ~ {approx_out_tokens}{Colors.RESET}\n"
+                                            )
+                                            sys.stdout.flush()
+                                elif event == "end" and isinstance(payload_obj, dict):
+                                    final_usage = payload_obj.get("usage")
+                                    final_conv_id = payload_obj.get("conversation_id")
+                                    # End of stream
+                                    break
 
-                        # Reset for next event
-                        event = None
-                        data_buf = []
-                        continue
+                            # Reset for next event
+                            event = None
+                            data_buf = []
+                            continue
 
-                    if line.startswith("event:"):
-                        event = line[len("event:") :].strip()
-                    elif line.startswith("data:"):
-                        data_buf.append(line[len("data:") :].strip())
+                        if line.startswith("event:"):
+                            event = line[len("event:") :].strip()
+                        elif line.startswith("data:"):
+                            data_buf.append(line[len("data:") :].strip())
+                except KeyboardInterrupt:
+                    try:
+                        resp.close()
+                    except Exception:
+                        pass
+                    sys.stdout.write(f"\n{Colors.DIM}[stream aborted]{Colors.RESET}\n")
+                    sys.stdout.flush()
 
                 # Finish the line
                 sys.stdout.write("\n")
@@ -700,8 +716,17 @@ class CortexCLI:
                 content = "".join(full_text)
 
                 # Show usage if enabled
-                if final_usage and self.settings.get("show_usage", True):
-                    CLIDisplay.print_usage_info(final_usage)
+                if self.settings.get("show_usage", True):
+                    if final_usage:
+                        CLIDisplay.print_usage_info(final_usage)
+                    elif approx_out_tokens:
+                        CLIDisplay.print_usage_info(
+                            {
+                                "total_tokens": approx_out_tokens,
+                                "input_tokens": 0,
+                                "output_tokens": approx_out_tokens,
+                            }
+                        )
 
                 # Record in history and save
                 self.history.add_message(content, "assistant", final_usage or {})
