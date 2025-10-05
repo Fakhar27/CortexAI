@@ -213,6 +213,30 @@ response2 = api.create(
 - **temperature**: LLM temperature 0.0-2.0 (float, default: 0.7)
 - **metadata**: Additional metadata to store (dict)
 
+## Streaming (SSE)
+
+The core server exposes a streaming endpoint that returns Server‑Sent Events (SSE):
+
+- Endpoint: `POST /chat/stream`
+- Events:
+  - `start` — basic metadata `{ response_id, conversation_id, model }`
+  - `delta` — incremental text chunks `{ text }`
+  - `end` — summary `{ response_id, conversation_id, model, usage }`
+
+Quick test with curl (smoke test):
+```bash
+curl -N -s \
+  -H 'Content-Type: application/json' \
+  -X POST \
+  -d '{"message":"Hello, stream!","model":"gpt-4o-mini"}' \
+  http://localhost:8000/chat/stream | sed -n '1,40p'
+```
+
+Notes
+- The non‑streaming endpoint `POST /chat` remains unchanged.
+- The demo Chat UI and CLI both support streaming (enabled by default) and fall back to non‑streaming if disabled.
+- For local demo, run the thin server wrapper which mounts the core ASGI app: `python scripts/example_web_server.py`.
+
 ## Best Practices
 
 ### Do's
@@ -227,9 +251,37 @@ response2 = api.create(
 - Don't rely on tool calling functionality yet
 - Don't ignore database connection errors
 
+## 🛠️ Quick Start Scripts
+
+For local development, we've included helpful scripts in the `scripts/` folder:
+
+```bash
+# Automated setup (recommended)
+./scripts/setup_local.sh
+
+# Interactive API key setup
+./scripts/setup_api_keys.sh
+
+# Test your setup
+python scripts/example_local.py
+
+# Start web server
+python scripts/example_web_server.py
+```
+
+📚 **See [scripts/README.md](scripts/README.md) for complete script documentation**
+
 ## Deployment Guide
 
 ### 🏠 Local Development
+
+**Option 1: Use Setup Scripts (Recommended)**
+```bash
+# Complete automated setup
+./scripts/setup_local.sh
+```
+
+**Option 2: Manual Setup**
 
 **Step 1: Install Cortex**
 ```bash
