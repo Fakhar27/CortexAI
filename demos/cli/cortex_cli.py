@@ -541,8 +541,9 @@ class CortexCLI:
                 message, "user", self.settings.get("show_timestamps", True)
             )
 
-        # Show typing indicator
-        CLIDisplay.print_typing_indicator()
+        # Show typing indicator only for non-streaming to avoid extra lines
+        if not self.settings.get("streaming", True):
+            CLIDisplay.print_typing_indicator()
 
         try:
             if self.settings.get("streaming", True):
