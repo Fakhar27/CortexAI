@@ -185,7 +185,7 @@ response = api.create(
     temperature=0.7
 )
 
-print(response["message"]["content"])
+print(response["output"][0]["content"][0]["text"])  # OpenAI Responses-style output
 ```
 
 ### Continue Conversation
@@ -226,6 +226,15 @@ response2 = api.create(
 - Don't use very high temperatures (>1.5) without testing
 - Don't rely on tool calling functionality yet
 - Don't ignore database connection errors
+
+## 🚀 Start With Demos
+Try Cortex with a ready‑made chat UI and an interactive CLI that talk to the REST API only (no Python imports):
+
+- Chat UI (Material 3): `demos/chat_ui/index.html` (open directly)
+- CLI: `demos/cli/cortex_cli.py` (run with Python)
+- Docker launcher: `demos/server/run_server.py`
+
+See screenshots and a full walkthrough in `demos/README.md`.
 
 ## 🛠️ Quick Start Scripts
 
@@ -287,7 +296,7 @@ response = api.create(
     instructions="You are a helpful assistant"
 )
 
-print(response["message"]["content"])
+print(response["output"][0]["content"][0]["text"])  # OpenAI Responses-style output
 ```
 
 **Step 4: Run**
@@ -459,21 +468,35 @@ Set API keys for the providers you want to use:
 
 ## Response Format
 
-Cortex returns OpenAI-compatible response format:
+Cortex returns an OpenAI Responses–style object. The assistant text is available under `output[0].content[0].text`:
 ```json
 {
-  "id": "response_abc123",
+  "id": "resp_abc123",
   "object": "response",
-  "created": 1699000000,
+  "created_at": 1699000000,
+  "status": "completed",
   "model": "gpt-4o",
-  "message": {
-    "role": "assistant", 
-    "content": "Response content here..."
-  },
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_123",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "Response content here...",
+          "annotations": []
+        }
+      ]
+    }
+  ],
   "usage": {
-    "total_tokens": 150,
-    "completion_tokens": 100,
-    "prompt_tokens": 50
+    "input_tokens": 50,
+    "input_tokens_details": { "cached_tokens": 0 },
+    "output_tokens": 100,
+    "output_tokens_details": { "reasoning_tokens": 0 },
+    "total_tokens": 150
   }
 }
 ```
@@ -552,3 +575,11 @@ psycopg[binary]==3.2.9  # NOT psycopg-binary
 ## Contributing
 
 Cortex is in active development. We welcome contributions, bug reports, and feature requests.
+## 🎬 Demo Apps (REST‑only)
+Looking for a ready‑made chat UI or an interactive CLI? Check out the demo apps — they speak to the REST API only and can be used as reference clients:
+
+- Chat UI (Material 3): `demos/chat_ui/index.html`
+- CLI: `demos/cli/cortex_cli.py`
+- Docker launcher: `demos/server/run_server.py`
+
+See the full tour and screenshots in `demos/README.md`.
