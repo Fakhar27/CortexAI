@@ -185,7 +185,7 @@ response = api.create(
     temperature=0.7
 )
 
-print(response["message"]["content"])
+print(response["output"][0]["content"][0]["text"])  # OpenAI Responses-style output
 ```
 
 ### Continue Conversation
@@ -226,6 +226,15 @@ response2 = api.create(
 - Don't use very high temperatures (>1.5) without testing
 - Don't rely on tool calling functionality yet
 - Don't ignore database connection errors
+
+## 🚀 Start With Demos
+Try Cortex with a ready‑made chat UI and an interactive CLI that talk to the REST API only (no Python imports):
+
+- Chat UI (Material 3): `demos/chat_ui/index.html` (open directly)
+- CLI: `demos/cli/cortex_cli.py` (run with Python)
+- Docker launcher: `demos/server/run_server.py`
+
+See screenshots and a full walkthrough in `demos/README.md`.
 
 ## 🛠️ Quick Start Scripts
 
@@ -287,7 +296,7 @@ response = api.create(
     instructions="You are a helpful assistant"
 )
 
-print(response["message"]["content"])
+print(response["output"][0]["content"][0]["text"])  # OpenAI Responses-style output
 ```
 
 **Step 4: Run**
@@ -552,3 +561,11 @@ psycopg[binary]==3.2.9  # NOT psycopg-binary
 ## Contributing
 
 Cortex is in active development. We welcome contributions, bug reports, and feature requests.
+## 🎬 Demo Apps (REST‑only)
+Looking for a ready‑made chat UI or an interactive CLI? Check out the demo apps — they speak to the REST API only and can be used as reference clients:
+
+- Chat UI (Material 3): `demos/chat_ui/index.html`
+- CLI: `demos/cli/cortex_cli.py`
+- Docker launcher: `demos/server/run_server.py`
+
+See the full tour and screenshots in `demos/README.md`.
