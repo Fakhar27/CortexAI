@@ -1,0 +1,68 @@
+name: Auto Rebase PR Branches
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # every 6 hours
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  rebase:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "cortex-auto-rebase[bot]"
+          git config user.email "cortex-auto-rebase[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          if ! git remote get-url upstream >/dev/null 2>&1; then
+            git remote add upstream https://github.com/Fakhar27/CortexAI.git
+          fi
+          git fetch upstream main
+
+      - name: Rebase branches onto upstream/main
+        env:
+          BRANCHES: |
+            feature/retrieve-api-and-demos-docs
+            docs/fix-usage-and-align-models-endpoint
+            docs/update-response-format
+        run: |
+          set -e
+          for br in ${BRANCHES}; do
+            echo "\n==> Processing $br"
+            if ! git show-ref --verify --quiet "refs/heads/$br"; then
+              # Try to fetch it from origin if not present locally
+              if git ls-remote --heads origin "$br" | grep -q "$br"; then
+                git fetch origin "$br:$br"
+              else
+                echo "Branch $br not found on origin; skipping"
+                continue
+              fi
+            fi
+            behind=$(git rev-list --left-right --count "$br...upstream/main" | awk '{print $2}')
+            echo "Branch $br is behind upstream/main by $behind commits"
+            if [ "$behind" != "0" ]; then
+              echo "Rebasing $br onto upstream/main..."
+              git checkout "$br"
+              if git rebase upstream/main; then
+                echo "Pushing rebased $br"
+                git push --force-with-lease origin "$br"
+              else
+                echo "Rebase conflict on $br; aborting"
+                git rebase --abort || true
+              fi
+              git checkout -
+            else
+              echo "No rebase needed for $br"
+            fi
+          done
