@@ -12,8 +12,12 @@ This folder contains utility scripts and examples to help you get started with C
 | `edit_env.py` | Utility | .env file editor helper |
 | `example_local.py` | Example | Basic usage demonstration |
 | `example_conversation.py` | Example | Multi-model conversation example |
-| `example_web_server.py` | Example | FastAPI web server |
 | `env_template.txt` | Template | .env file template |
+
+Note: the full chat UI and interactive CLI have moved to `demos/` as REST-only demo apps:
+
+- Chat UI: `demos/chat_ui/index.html` (open directly in your browser)
+- CLI: `demos/cli/cortex_cli.py` (run with `python demos/cli/cortex_cli.py`)
 
 ## 🚀 Quick Start
 
@@ -114,15 +118,27 @@ python scripts/example_conversation.py
 - Creates a multi-turn dialogue
 
 #### `example_web_server.py`
-**Purpose**: FastAPI web server with REST API
+**Purpose**: Launch official REST API (Docker)
 ```bash
 python scripts/example_web_server.py
 ```
 **What it does**:
-- Starts FastAPI server on port 8000
-- Provides REST API endpoints
-- Auto-generates API documentation
-- Handles chat requests
+- Runs the official Cortex REST API Docker image
+- Exposes the API on port 8000 (by default)
+- Provides REST API endpoints and auto-generated docs at /docs
+- Keeps scripts independent (no core module imports)
+
+### Demo Apps (REST-only)
+
+#### `demos/chat_ui/index.html`
+Open in your browser. Default Server URL is `http://localhost:8000` (use the Docker launcher above). Modern Material 3 design, dark mode, conversation list, and model picker.
+
+#### `demos/cli/cortex_cli.py`
+Interactive terminal client that talks to the REST API. Run:
+```bash
+python demos/cli/cortex_cli.py
+```
+Configure server URL and defaults from within the CLI (`settings`).
 
 ## 🔧 Configuration Files
 
@@ -162,10 +178,10 @@ python scripts/validate_database.py
 python scripts/example_conversation.py
 ```
 
-### Web Server
+### Web Server (Docker launcher moved to demos)
 ```bash
-# 1. Start the web server
-python scripts/example_web_server.py
+# 1. Start the REST API (Docker)
+python demos/server/run_server.py
 
 # 2. Visit API documentation
 open http://localhost:8000/docs

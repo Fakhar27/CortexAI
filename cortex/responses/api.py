@@ -7,6 +7,7 @@ from .state import ResponsesState
 from .persistence import get_checkpointer
 from .llm import get_llm
 from .methods.create import create_response
+from .methods.retrieve import retrieve_response
 
 
 class ResponsesAPI:
@@ -185,3 +186,20 @@ class ResponsesAPI:
             temperature=temperature,
             metadata=metadata
         )
+
+    def retrieve(
+        self,
+        response_id: Optional[str] = None,
+        thread_id: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Retrieve a conversation's messages by response_id or thread_id.
+
+        Args:
+            response_id: A specific response ID within a conversation.
+            thread_id: Stable conversation/thread ID.
+
+        Returns:
+            Dict with keys: conversation_id, messages (list of {role, content}).
+        """
+        return retrieve_response(self, response_id=response_id, thread_id=thread_id)

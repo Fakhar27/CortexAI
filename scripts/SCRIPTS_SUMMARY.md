@@ -15,8 +15,15 @@ scripts/
 ├── edit_env.py                 # .env file editor helper
 ├── example_local.py            # Basic usage demonstration
 ├── example_conversation.py     # Multi-model conversation example
-├── example_web_server.py       # FastAPI web server
 └── env_template.txt            # .env file template
+
+demos/
+├── chat_ui/                    # REST-only chat web app (Material 3)
+│   └── index.html
+├── cli/                        # REST-only interactive CLI
+│   └── cortex_cli.py
+└── server/                     # REST API Docker launcher
+    └── run_server.py
 ```
 
 ## 🔧 Script Categories
@@ -32,7 +39,12 @@ scripts/
 ### Example Scripts
 - **`example_local.py`** - Basic CortexAI usage
 - **`example_conversation.py`** - Multi-model conversations
-- **`example_web_server.py`** - REST API server
+- **`example_web_server.py`** - Docker launcher for REST API
+
+### Demo Apps (REST-only)
+- **`demos/chat_ui/index.html`** - Full chat interface (open in browser)
+- **`demos/cli/cortex_cli.py`** - Interactive CLI (run with Python)
+- **`demos/server/run_server.py`** - Docker launcher for REST API
 
 ### Templates
 - **`env_template.txt`** - .env file template
@@ -85,6 +97,7 @@ python scripts/example_web_server.py
 - [Local Setup Guide](LOCAL_SETUP.md) - Detailed setup instructions
 - [Quick Start Guide](QUICK_START.md) - Quick reference
 - [Scripts Documentation](scripts/README.md) - Complete scripts guide
+ - [Demos](../demos/README.md) - UI and CLI apps (REST-only)
 
 ---
 
